@@ -1,26 +1,100 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --color-forest: #1e131d;
+  --color-forest-deep: #150d14;
+  --color-forest-light: #2a1b29;
+  --color-cream: #F9F8F5;
+  --color-cream-card: #FFFFFF;
+  --color-sand: #ECEAE4;
+  --color-sand-subtle: #F3F1EC;
+  --color-sand-border: #E2DFD7;
+  --color-pistachio: #aa5ca5;
+  --color-pistachio-muted: #d9bdd7;
+  --color-pistachio-light: #fbf3fa;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+@theme {
+  --color-forest: #1e131d;
+  --color-forest-deep: #150d14;
+  --color-forest-light: #2a1b29;
+  --color-cream: #F9F8F5;
+  --color-sand: #ECEAE4;
+  --color-pistachio: #aa5ca5;
+  --font-serif: var(--font-serif), "Times New Roman", Times, serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
+  background-color: #F9F8F5;
+  color: #1e131d;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: #F9F8F5;
+  color: #1e131d;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom crisp border styles */
+.border-sand {
+  border-color: #ECEAE4;
+}
+
+.bg-cream {
+  background-color: #F9F8F5;
+}
+
+.bg-forest {
+  background-color: #1e131d;
+}
+
+.text-forest {
+  color: #1e131d;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F9F8F5;
+}
+::-webkit-scrollbar-thumb {
+  background: #D8D4C9;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #1e131d;
+}
+
+/* Hide scrollbar for mobile carousels */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Continuous infinite marquee for reviews */
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 40s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
 }
