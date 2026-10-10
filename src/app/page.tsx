@@ -12,14 +12,14 @@ import Footer from "@/components/Footer";
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-[#1e131d] text-[#1e131d] flex flex-col font-sans">
+    <main className="min-h-screen bg-[#FAF8F5] text-[#261B24] flex flex-col font-sans">
       {/* Floating Seed.com Pill Header */}
       <Navbar onOpenBooking={() => { window.location.href = "/rezervacia"; }} />
 
       {/* Hero Canvas with Panoramic Background */}
       <Hero onOpenBooking={() => { window.location.href = "/rezervacia"; }} />
 
-      {/* Featured Products Bar (Seed.com 4-column clean cards) */}
+      {/* Featured Products Bar (Clean White Cards on Warm Cream) */}
       <div id="ponuka">
         <FeaturedProducts onSelectProduct={(cat) => { window.location.href = `/rezervacia?category=${cat}`; }} />
       </div>
@@ -28,9 +28,9 @@ export default function Home() {
       <Philosophy />
 
       {/* Seed-style Reservation Teaser Banner */}
-      <section className="bg-[#1e131d] py-20 sm:py-28 px-6 sm:px-12 text-center text-white border-t border-white/5">
+      <section className="bg-[#261B24] py-20 sm:py-28 px-6 sm:px-12 text-center text-white border-t border-white/10">
         <div className="max-w-3xl mx-auto">
-          <span className="text-[11px] font-sans uppercase tracking-[0.25em] text-[#d8b4e2] font-medium block mb-4">
+          <span className="text-[11px] font-sans uppercase tracking-[0.25em] text-[#e5a8db] font-medium block mb-4">
             Výroba na zákazku & Výdajné okno
           </span>
           <h2 className="font-serif text-3xl sm:text-5xl font-normal tracking-tight text-white leading-[1.1] mb-6">
@@ -41,7 +41,7 @@ export default function Home() {
           </p>
           <a
             href="/rezervacia"
-            className="inline-flex items-center gap-2 rounded-full bg-white text-[#1e131d] hover:bg-[#F9F8F5] px-9 py-4 text-xs sm:text-sm font-semibold uppercase tracking-wider transition-all active:scale-[0.98] shadow-lg shadow-black/20"
+            className="inline-flex items-center gap-2 rounded-full bg-[#a62891] hover:bg-[#8e207b] text-white px-9 py-4 text-xs sm:text-sm font-semibold uppercase tracking-wider transition-all active:scale-[0.98] shadow-lg shadow-[#a62891]/25"
           >
             <span>Prejsť do rezervačného systému</span>
             <ArrowRight className="w-4 h-4 stroke-[2]" />

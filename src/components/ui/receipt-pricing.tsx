@@ -579,26 +579,26 @@ export function OrderTicketReceipt({
     >
       <article
         aria-label="Rezervačný doklad"
-        className="bg-[#FFFFFF] text-[#1e131d] border-x border-[#E2DFD7] relative overflow-hidden px-6 sm:px-7 pt-9 pb-8 font-mono transition-all duration-300"
+        className="bg-[#FFFFFF] text-[#261B24] border-x border-[#E2DFD7] relative overflow-hidden px-6 sm:px-7 pt-9 pb-8 font-mono transition-all duration-300"
         style={paper}
       >
         {/* Header */}
         <header className="text-center">
-          <p className="text-[12px] font-bold tracking-[0.28em] text-[#1e131d] uppercase">{merchant}</p>
-          <p className="text-[#1e131d]/60 mt-1 text-[10px] tracking-[0.18em] uppercase font-sans">{merchantNote}</p>
+          <p className="text-[12px] font-bold tracking-[0.28em] text-[#261B24] uppercase">{merchant}</p>
+          <p className="text-[#261B24]/60 mt-1 text-[10px] tracking-[0.18em] uppercase font-sans">{merchantNote}</p>
         </header>
 
         <Rule className="mt-4" />
 
         {/* Order Meta */}
-        <dl className="text-[#1e131d]/75 mt-3 space-y-1 text-[11px] tracking-[0.08em] uppercase">
+        <dl className="text-[#261B24]/75 mt-3 space-y-1 text-[11px] tracking-[0.08em] uppercase">
           <div className="flex justify-between gap-3">
             <dt>Číslo dopytu</dt>
-            <dd className="font-bold text-[#1e131d] tabular-nums">{code}</dd>
+            <dd className="font-bold text-[#261B24] tabular-nums">{code}</dd>
           </div>
           <div className="flex justify-between gap-3">
             <dt>Typ požiadavky</dt>
-            <dd className="text-[#1e131d]">{badge}</dd>
+            <dd className="text-[#261B24]">{badge}</dd>
           </div>
         </dl>
 
@@ -609,7 +609,7 @@ export function OrderTicketReceipt({
           <p className="text-[10px] uppercase tracking-[0.2em] text-[#aa5ca5] font-bold">
             *** POLOŽKA OBJEDNÁVKY ***
           </p>
-          <h3 className="text-base sm:text-lg font-bold tracking-[0.1em] text-[#1e131d] uppercase mt-1">
+          <h3 className="text-base sm:text-lg font-bold tracking-[0.1em] text-[#261B24] uppercase mt-1">
             {title}
           </h3>
         </div>
@@ -619,10 +619,10 @@ export function OrderTicketReceipt({
         {/* Ledger Rows with Dot Leaders */}
         <ul className="mt-3.5 space-y-2 text-[11px] sm:text-xs tracking-[0.04em] uppercase">
           {items.map((item, idx) => (
-            <li key={idx} className="flex items-baseline gap-1.5">
-              <span className="shrink-0 text-[#1e131d]/70">{item.label}</span>
-              <span aria-hidden="true" className="border-current/30 min-w-3 flex-1 translate-y-[-0.28em] border-b border-dotted" />
-              <span className="shrink-0 font-semibold text-[#1e131d] max-w-[150px] truncate text-right">
+            <li key={idx} className="flex items-baseline gap-1.5 min-w-0">
+              <span className="shrink text-[#261B24]/75 truncate max-w-[65%]">{item.label}</span>
+              <span aria-hidden="true" className="border-current/30 min-w-2 flex-1 translate-y-[-0.28em] border-b border-dotted shrink-0" />
+              <span className="shrink-0 font-semibold text-[#261B24] text-right ml-auto">
                 {item.value}
               </span>
             </li>
@@ -635,9 +635,9 @@ export function OrderTicketReceipt({
         <div className="border-current/40 mt-3 border-t-[3px] border-double pt-3">
           <div className="flex items-baseline justify-between gap-3">
             <p className="text-xs font-bold tracking-[0.12em] uppercase">Orientačná suma</p>
-            <p className="text-lg sm:text-xl font-bold text-[#1e131d] tabular-nums">{priceNote}</p>
+            <p className="text-lg sm:text-xl font-bold text-[#261B24] tabular-nums">{priceNote}</p>
           </div>
-          <p className="text-[#1e131d]/60 mt-1.5 text-[10px] tracking-[0.08em] uppercase">
+          <p className="text-[#261B24]/60 mt-1.5 text-[10px] tracking-[0.08em] uppercase">
             Platba pri prevzatí alebo zálohovou faktúrou
           </p>
         </div>
@@ -663,13 +663,13 @@ export function OrderTicketReceipt({
               />
             ))}
           </div>
-          <p aria-hidden="true" className="text-[#1e131d]/60 mt-1.5 text-center text-[10px] tracking-[0.25em] uppercase font-mono">
+          <p aria-hidden="true" className="text-[#261B24]/60 mt-1.5 text-center text-[10px] tracking-[0.25em] uppercase font-mono">
             {code}-HN
           </p>
         </div>
 
         {/* Bottom Location Note */}
-        <div className="mt-3 text-center text-[9px] text-[#1e131d]/60 tracking-wider uppercase font-sans space-y-0.5">
+        <div className="mt-3 text-center text-[9px] text-[#261B24]/60 tracking-wider uppercase font-sans space-y-0.5">
           <p>{pickupLocation}</p>
           <p>{notice}</p>
         </div>

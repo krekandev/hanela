@@ -36,13 +36,19 @@ export const metadata: Metadata = {
     locale: "sk_SK",
     siteName: "Hanela – koláčiky a torty",
   },
+  icons: {
+    icon: "/images/logo.png",
+    apple: "/images/logo.png",
+  },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#1e131d",
+  themeColor: "#261B24",
   width: "device-width",
   initialScale: 1,
 };
+
+import { CartProvider } from "@/context/CartContext";
 
 export default function RootLayout({
   children,
@@ -51,8 +57,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="sk" className={`${inter.variable} ${lora.variable} h-full scroll-smooth`}>
-      <body className="min-h-full flex flex-col font-sans antialiased bg-[#F9F8F5] text-[#1e131d] selection:bg-[#aa5ca5]/30 selection:text-[#1e131d]">
-        {children}
+      <body className="min-h-full flex flex-col font-sans antialiased bg-[#FAF8F5] text-[#261B24] selection:bg-[#a62891]/25 selection:text-[#261B24]">
+        <CartProvider>{children}</CartProvider>
       </body>
     </html>
   );

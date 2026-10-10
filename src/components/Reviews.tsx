@@ -51,30 +51,30 @@ const marqueeItems = [...reviews, ...reviews];
 
 export default function Reviews() {
   return (
-    <section id="recenzie" className="bg-[#F9F8F5] py-16 sm:py-20 border-b border-[#ECEAE4] overflow-hidden">
+    <section id="recenzie" className="bg-[#FAF8F5] py-16 sm:py-20 border-b border-[#EAE5DC] overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10">
         
         {/* Compact Section Header */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-[#ECEAE4]">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-[#EAE5DC]">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#D8D4C9] bg-white px-3 py-1 text-[11px] font-semibold text-[#1e131d] uppercase tracking-wider mb-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#aa5ca5]" />
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#DFD8CD] bg-white px-3 py-1 text-[11px] font-semibold text-[#261B24] uppercase tracking-wider mb-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#a62891]" />
               Skúsenosti zákazníkov
             </div>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-[-0.03em] text-[#1e131d]">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-[-0.03em] text-[#261B24]">
               Dôvera overená stovkami osláv.
             </h2>
           </div>
 
           {/* Rating Badge */}
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1 text-[#aa5ca5]">
+            <div className="flex items-center gap-1 text-[#a62891]">
               {[...Array(5)].map((_, i) => (
                 <Star key={i} className="w-4 h-4 fill-current stroke-none" />
               ))}
             </div>
-            <span className="font-mono font-bold text-sm text-[#1e131d]">5.0 / 5.0</span>
-            <span className="text-xs text-[#1e131d]/50 hidden sm:inline">Google & Zlatá Firma</span>
+            <span className="font-mono font-bold text-sm text-[#261B24]">5.0 / 5.0</span>
+            <span className="text-xs text-[#261B24]/50 hidden sm:inline">Google & Zlatá Firma</span>
           </div>
         </div>
 
@@ -83,37 +83,37 @@ export default function Reviews() {
       {/* Infinite Horizontal Running Marquee */}
       <div className="relative w-full overflow-hidden">
         {/* Left & Right gradient edge fades */}
-        <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-12 sm:w-24 bg-gradient-to-r from-[#F9F8F5] to-transparent z-10" />
-        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-12 sm:w-24 bg-gradient-to-l from-[#F9F8F5] to-transparent z-10" />
+        <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-12 sm:w-24 bg-gradient-to-r from-[#FAF8F5] to-transparent z-10" />
+        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-12 sm:w-24 bg-gradient-to-l from-[#FAF8F5] to-transparent z-10" />
 
         {/* Marquee Track */}
         <div className="animate-marquee flex gap-4 sm:gap-5 px-4 cursor-grab active:cursor-grabbing">
           {marqueeItems.map((r, idx) => (
             <div
               key={idx}
-              className="w-[280px] sm:w-[330px] shrink-0 rounded-2xl bg-white border border-[#ECEAE4] p-5 sm:p-6 shadow-xs flex flex-col justify-between hover:shadow-md transition-shadow"
+              className="w-[280px] sm:w-[330px] shrink-0 rounded-2xl bg-white border border-[#EAE5DC] p-5 sm:p-6 shadow-xs flex flex-col justify-between hover:shadow-md transition-shadow"
             >
               <div>
                 <div className="flex items-center justify-between text-xs mb-3">
-                  <div className="flex items-center gap-1 font-mono font-semibold text-[#aa5ca5] bg-[#fbf3fa] px-2 py-0.5 rounded-full text-[11px]">
+                  <div className="flex items-center gap-1 font-mono font-semibold text-[#a62891] bg-[#fcf4fb] px-2 py-0.5 rounded-full text-[11px]">
                     <Star className="w-3 h-3 fill-current stroke-none" />
                     <span>{r.rating}</span>
                   </div>
-                  <span className="text-[11px] text-[#1e131d]/45 font-medium">
+                  <span className="text-[11px] text-[#261B24]/45 font-medium">
                     {r.date}
                   </span>
                 </div>
 
-                <p className="text-xs sm:text-[13px] text-[#1e131d]/80 leading-relaxed italic mb-5 line-clamp-4">
+                <p className="text-xs sm:text-[13px] text-[#261B24]/80 leading-relaxed italic mb-5 line-clamp-4">
                   "{r.text}"
                 </p>
               </div>
 
-              <div className="pt-3 border-t border-[#ECEAE4]/80">
-                <p className="font-semibold text-xs sm:text-sm text-[#1e131d] truncate">
+              <div className="pt-3 border-t border-[#EAE5DC]/80">
+                <p className="font-semibold text-xs sm:text-sm text-[#261B24] truncate">
                   {r.author}
                 </p>
-                <p className="text-[11px] text-[#1e131d]/60 mt-0.5 truncate">
+                <p className="text-[11px] text-[#261B24]/60 mt-0.5 truncate">
                   {r.event}
                 </p>
               </div>

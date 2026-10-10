@@ -72,9 +72,9 @@ export default function PracticalInfo() {
           </div>
 
           {/* 2. Informácie o cukrárni a kontakty (3 cols) */}
-          <div className="lg:col-span-3 rounded-3xl bg-[#1e131d] text-white p-6 sm:p-7 flex flex-col justify-between shadow-xs">
+          <div className="lg:col-span-3 rounded-3xl bg-[#261B24] text-white p-6 sm:p-7 flex flex-col justify-between shadow-xs">
             <div>
-              <div className="flex items-center gap-1.5 text-xs uppercase tracking-widest font-semibold text-[#d8b4e2] mb-1.5">
+              <div className="flex items-center gap-1.5 text-xs uppercase tracking-widest font-semibold text-[#e5a8db] mb-1.5">
                 <MapPin className="w-3.5 h-3.5 stroke-[2.5]" />
                 <span>Adresa výrobne</span>
               </div>
@@ -84,7 +84,7 @@ export default function PracticalInfo() {
 
               <div className="space-y-4 text-xs font-sans">
                 <div>
-                  <p className="text-[11px] uppercase tracking-wider text-[#d8b4e2]/80 font-medium mb-0.5">
+                  <p className="text-[11px] uppercase tracking-wider text-[#e5a8db]/80 font-medium mb-0.5">
                     Osobný odber
                   </p>
                   <p className="font-semibold text-sm text-white">
@@ -103,14 +103,14 @@ export default function PracticalInfo() {
                     href="tel:+421910960913"
                     className="flex items-center gap-2 text-white/90 hover:text-white transition-colors"
                   >
-                    <Phone className="w-3.5 h-3.5 text-[#d8b4e2]" />
+                    <Phone className="w-3.5 h-3.5 text-[#e5a8db]" />
                     <span className="font-mono text-xs">+421 910 960 913</span>
                   </a>
                   <a
                     href="mailto:hanelacakes@gmail.com"
                     className="flex items-center gap-2 text-white/90 hover:text-white transition-colors"
                   >
-                    <Mail className="w-3.5 h-3.5 text-[#d8b4e2]" />
+                    <Mail className="w-3.5 h-3.5 text-[#e5a8db]" />
                     <span className="text-xs truncate">hanelacakes@gmail.com</span>
                   </a>
                 </div>
@@ -122,9 +122,9 @@ export default function PracticalInfo() {
                 href="https://maps.google.com/?q=Hlavna+102+Vinicne"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-white text-[#1e131d] px-4 py-2.5 text-xs font-semibold uppercase tracking-wider hover:bg-[#F9F8F5] active:scale-95 transition-all shadow"
+                className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-white text-[#261B24] px-4 py-2.5 text-xs font-semibold uppercase tracking-wider hover:bg-[#FAF8F5] active:scale-95 transition-all shadow"
               >
-                <Navigation className="w-3.5 h-3.5 text-[#1e131d]" />
+                <Navigation className="w-3.5 h-3.5 text-[#261B24]" />
                 <span>Navigovať</span>
               </a>
             </div>
@@ -140,8 +140,8 @@ export default function PracticalInfo() {
               referrerPolicy="no-referrer-when-downgrade"
             />
             {/* Map floating pin badge */}
-            <div className="absolute top-4 left-4 bg-[#1e131d]/90 backdrop-blur-md border border-white/20 text-white px-3.5 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 shadow-lg pointer-events-none">
-              <span className="w-2 h-2 rounded-full bg-[#d8b4e2] animate-pulse" />
+            <div className="absolute top-4 left-4 bg-[#261B24]/90 backdrop-blur-md border border-white/20 text-white px-3.5 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 shadow-lg pointer-events-none">
+              <span className="w-2 h-2 rounded-full bg-[#a62891] animate-pulse" />
               <span>Výrobňa Viničné (Hlavná 102)</span>
             </div>
           </div>

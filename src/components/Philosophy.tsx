@@ -7,112 +7,104 @@ export default function Philosophy() {
   return (
     <section
       id="filozofia"
-      className="relative w-full py-16 sm:py-24 px-4 sm:px-6 lg:px-8 bg-[#1e131d] overflow-hidden"
+      className="relative w-full py-12 sm:py-20 px-3.5 sm:px-6 lg:px-8 bg-[#261B24] overflow-hidden"
     >
       {/* Background Soft Botanical/Ingredients Photography with Warm Tone */}
-      <div className="absolute inset-0 z-0">
+      <div className="absolute inset-0 z-0 pointer-events-none">
         <Image
           src="/images/pure_ingredients.jpg"
           alt="Poctivé ingrediencie v pozadí"
           fill
           sizes="100vw"
-          className="object-cover opacity-25 filter blur-[6px] scale-105"
+          className="object-cover opacity-15 filter blur-[6px] scale-105"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#1e131d] via-[#1e131d]/85 to-[#1e131d]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#261B24] via-[#261B24]/90 to-[#261B24]" />
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto">
-        {/* Giant Frosted Glass Card (Exact Seed.com aesthetic) */}
-        <div className="relative rounded-[32px] sm:rounded-[44px] bg-[#2a1b29]/70 backdrop-blur-2xl border border-white/20 p-8 sm:p-14 lg:p-20 text-white shadow-2xl overflow-hidden">
+      <div className="relative z-10 max-w-6xl mx-auto">
+        {/* Compact Frosted Glass Card */}
+        <div className="relative rounded-[28px] sm:rounded-[36px] bg-[#342432]/85 backdrop-blur-xl border border-white/15 p-6 sm:p-10 lg:p-14 text-white shadow-xl overflow-hidden">
           
-          {/* Subtle Ambient Light Gradient on card */}
-          <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 rounded-full bg-white/5 blur-3xl pointer-events-none" />
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
             
-            {/* Left Column: Shortened High-Contrast Headline & Callout */}
-            <div className="lg:col-span-7 flex flex-col items-start">
+            {/* Left Column: Shortened High-Contrast Headline & Details */}
+            <div className="lg:col-span-7 flex flex-col items-start text-left">
               
-              {/* Shortened Two-Tone Contrast Headline (White/Cream vs Pistachio Green) */}
-              <h2 className="text-4xl sm:text-5xl lg:text-[56px] font-semibold tracking-[-0.035em] leading-[1.06] text-balance">
-                <span className="text-[#F9F8F5]">Žiadne margaríny.</span>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-[-0.03em] leading-[1.1] text-balance">
+                <span className="text-[#FAF8F5]">Žiadne margaríny.</span>
                 <br />
-                <span className="text-[#d8b4e2]">Iba pravé suroviny.</span>
+                <span className="text-[#e5a8db]">Iba pravé suroviny.</span>
               </h2>
 
-              {/* Subheading */}
-              <p className="mt-6 text-sm sm:text-base text-white/80 leading-relaxed font-normal max-w-xl">
+              <p className="mt-4 text-xs sm:text-sm text-white/80 leading-relaxed font-normal max-w-xl">
                 Odmietame rastlinné náhrady, palmové tuky aj umelé prášky. V každom dezerte pracujeme výhradne s 82% farmárskym maslom, pravým talianskym mascarpone, 35% smotanou, čistou madagaskarskou vanilkou a belgickou čokoládou Callebaut.
               </p>
 
-              {/* Seed-style Stat Pill Container */}
-              <div className="mt-8 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 p-4 sm:p-5 flex items-center justify-between gap-6 w-full max-w-md">
-                <div>
-                  <span className="inline-block rounded-full border border-white/30 px-2.5 py-0.5 text-[10px] font-mono tracking-wider text-white/90 mb-1">
-                    100% ŽIVOČÍŠNY TUK
+              {/* Minimalist Trust Features List */}
+              <div className="mt-6 grid grid-cols-2 gap-3 w-full max-w-md">
+                <div className="rounded-xl bg-white/5 border border-white/10 p-3">
+                  <span className="text-base sm:text-lg font-mono font-bold text-[#e5a8db] block">
+                    100%
                   </span>
-                  <p className="text-xs text-white/80 font-normal">
+                  <span className="text-[11px] text-white/75 leading-tight block mt-0.5">
                     Pravé mascarpone & farmárske maslo
-                  </p>
+                  </span>
                 </div>
-
-                <div className="flex items-center gap-2 text-right">
-                  <span className="text-2xl sm:text-3xl font-mono font-semibold text-[#d8b4e2]">
+                <div className="rounded-xl bg-white/5 border border-white/10 p-3">
+                  <span className="text-base sm:text-lg font-mono font-bold text-[#e5a8db] block">
                     0%
                   </span>
-                  <span className="text-[11px] uppercase tracking-wider text-white/70 block text-left leading-tight">
-                    Margarínov<br />& náhrad
+                  <span className="text-[11px] text-white/75 leading-tight block mt-0.5">
+                    Margarínov, palmových tukov a náhrad
                   </span>
                 </div>
               </div>
 
               {/* Footnote */}
-              <p className="mt-6 text-[11px] text-white/50 tracking-tight">
+              <p className="mt-4 text-[10px] text-white/45 tracking-tight">
                 * Všetky receptúry podliehajú certifikácii HACCP a čerstvej výrobe v deň odberu.
               </p>
 
             </div>
 
-            {/* Right Column: Transparent Visual with Minimalist Seed Annotations */}
-            <div className="lg:col-span-5 flex flex-col items-center justify-center relative">
+            {/* Right Column: Visual and Key Attributes */}
+            <div className="lg:col-span-5 flex flex-col items-center justify-center">
               
-              {/* Floating Transparent Product */}
-              <div className="relative w-64 sm:w-80 aspect-square flex items-center justify-center my-4">
+              {/* Product Visual */}
+              <div className="relative w-48 sm:w-64 aspect-square flex items-center justify-center my-2">
                 <Image
                   src="/images/trans_tartlets.png"
                   alt="Remeselná tartaletka a éclair z čistých surovín"
                   fill
-                  sizes="(max-width: 1024px) 80vw, 40vw"
-                  className="object-contain drop-shadow-[0_25px_30px_rgba(0,0,0,0.5)]"
+                  sizes="(max-width: 640px) 192px, 256px"
+                  className="object-contain drop-shadow-[0_20px_25px_rgba(0,0,0,0.4)]"
                 />
               </div>
 
-              {/* Clean Minimalist Callout Labels (Seed style) */}
-              <div className="w-full space-y-4 pt-2 border-t border-white/15 text-xs text-white/80">
-                <div className="flex items-start justify-between gap-4">
-                  <span className="font-semibold text-white tracking-wider text-[11px] uppercase shrink-0">
+              {/* Callout highlights */}
+              <div className="w-full space-y-2.5 pt-3 border-t border-white/15 text-xs text-white/80">
+                <div className="flex items-center justify-between gap-3 text-[11px]">
+                  <span className="font-semibold text-white tracking-wider uppercase shrink-0">
                     KRÉM & MASCARPONE
                   </span>
-                  <span className="text-right text-white/70 text-[11px]">
-                    100% pravé talianske mascarpone s 35% smotanou
+                  <span className="text-right text-white/70">
+                    100% pravé mascarpone
                   </span>
                 </div>
-
-                <div className="flex items-start justify-between gap-4">
-                  <span className="font-semibold text-white tracking-wider text-[11px] uppercase shrink-0">
+                <div className="flex items-center justify-between gap-3 text-[11px]">
+                  <span className="font-semibold text-white tracking-wider uppercase shrink-0">
                     ČOKOLÁDA CALLEBAUT
                   </span>
-                  <span className="text-right text-white/70 text-[11px]">
-                    Výhradne belgické kakaové maslo bez palmového tuku
+                  <span className="text-right text-white/70">
+                    Belgické kakaové maslo
                   </span>
                 </div>
-
-                <div className="flex items-start justify-between gap-4">
-                  <span className="font-semibold text-white tracking-wider text-[11px] uppercase shrink-0">
-                    ČERSTVOSŤ V DEŇ VÝDAJA
+                <div className="flex items-center justify-between gap-3 text-[11px]">
+                  <span className="font-semibold text-white tracking-wider uppercase shrink-0">
+                    ČERSTVOSŤ VÝDAJA
                   </span>
-                  <span className="text-right text-white/70 text-[11px]">
-                    Finišované v dohodnutý čas vo výrobni Viničné
+                  <span className="text-right text-white/70">
+                    Čerstvo v deň odberu
                   </span>
                 </div>
               </div>

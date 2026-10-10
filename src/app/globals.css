@@ -1,57 +1,61 @@
 @import "tailwindcss";
 
 :root {
-  --color-forest: #1e131d;
-  --color-forest-deep: #150d14;
-  --color-forest-light: #2a1b29;
-  --color-cream: #F9F8F5;
+  --color-forest: #261B24;
+  --color-forest-deep: #1E151D;
+  --color-forest-light: #362634;
+  --color-cream: #FAF8F5;
   --color-cream-card: #FFFFFF;
-  --color-sand: #ECEAE4;
-  --color-sand-subtle: #F3F1EC;
-  --color-sand-border: #E2DFD7;
-  --color-pistachio: #aa5ca5;
-  --color-pistachio-muted: #d9bdd7;
-  --color-pistachio-light: #fbf3fa;
+  --color-sand: #EAE5DC;
+  --color-sand-subtle: #F4EFE7;
+  --color-sand-border: #DFD8CD;
+  --color-brand: #a62891;
+  --color-brand-muted: #d9a5cf;
+  --color-brand-light: #fcf4fb;
+  --color-pistachio: #a62891;
+  --color-pistachio-muted: #d9a5cf;
+  --color-pistachio-light: #fcf4fb;
 }
 
 @theme {
-  --color-forest: #1e131d;
-  --color-forest-deep: #150d14;
-  --color-forest-light: #2a1b29;
-  --color-cream: #F9F8F5;
-  --color-sand: #ECEAE4;
-  --color-pistachio: #aa5ca5;
+  --color-forest: #261B24;
+  --color-forest-deep: #1E151D;
+  --color-forest-light: #362634;
+  --color-cream: #FAF8F5;
+  --color-sand: #EAE5DC;
+  --color-brand: #a62891;
+  --color-pistachio: #a62891;
   --font-serif: var(--font-serif), "Times New Roman", Times, serif;
 }
 
 html {
   scroll-behavior: smooth;
-  background-color: #F9F8F5;
-  color: #1e131d;
+  background-color: #FAF8F5;
+  color: #261B24;
 }
 
 body {
-  background-color: #F9F8F5;
-  color: #1e131d;
+  background-color: #FAF8F5;
+  color: #261B24;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 /* Custom crisp border styles */
 .border-sand {
-  border-color: #ECEAE4;
+  border-color: #EAE5DC;
 }
 
 .bg-cream {
-  background-color: #F9F8F5;
+  background-color: #FAF8F5;
 }
 
 .bg-forest {
-  background-color: #1e131d;
+  background-color: #261B24;
 }
 
 .text-forest {
-  color: #1e131d;
+  color: #261B24;
 }
 
 /* Custom scrollbar */
