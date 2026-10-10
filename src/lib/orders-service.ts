@@ -276,6 +276,7 @@ export function subscribeOrders(callback: (orders: Order[]) => void): () => void
             ...(d.data() as Omit<Order, "id">),
           }));
           saveToStorage(STORAGE_KEY_ORDERS, orders);
+          callback(orders);
         },
         (error) => {
           console.warn("[Firestore] subscribeOrders snapshot error, fallback to local:", error);
@@ -303,6 +304,13 @@ export function subscribeOrders(callback: (orders: Order[]) => void): () => void
     window.removeEventListener("hanela-storage-update", handleStorageUpdate);
     window.removeEventListener("storage", handleStorageUpdate);
   };
+}
+
+/**
+ * Removes undefined fields deeply so Firestore setDoc does not reject payload.
+ */
+function cleanForFirestore<T>(data: T): T {
+  return JSON.parse(JSON.stringify(data));
 }
 
 export async function saveOrder(orderData: {
@@ -339,9 +347,11 @@ export async function saveOrder(orderData: {
 
   if (isFirebaseConfigured && db) {
     try {
-      await setDoc(doc(db, "orders", id), newOrder);
+      const sanitized = cleanForFirestore(newOrder);
+      await setDoc(doc(db, "orders", id), sanitized);
+      console.log(`[Firestore] Order ${id} (${orderNumber}) successfully saved to Firestore.`);
     } catch (err) {
-      console.warn("[Firestore] saveOrder failed, saving to local store:", err);
+      console.error("[Firestore] saveOrder failed to write to Firestore:", err);
     }
   }
 
@@ -436,6 +446,7 @@ export function subscribeBlockedDates(callback: (dates: BlockedDate[]) => void):
           if (isUnsubscribed) return;
           const dates = snapshot.docs.map((d) => d.data() as BlockedDate);
           saveToStorage(STORAGE_KEY_BLOCKED_DATES, dates);
+          callback(dates);
         },
         (error) => {
           console.warn("[Firestore] subscribeBlockedDates snapshot error:", error);
@@ -568,6 +579,7 @@ export function subscribePrices(
             pricesMap[id] = { ...data, productId: id };
           });
           saveToStorage(STORAGE_KEY_PRICES, pricesMap);
+          callback(pricesMap);
         },
         (error) => {
           console.warn("[Firestore] subscribePrices snapshot error:", error);
