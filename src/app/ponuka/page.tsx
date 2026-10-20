@@ -67,10 +67,22 @@ export default function PonukaPage() {
     return currentCategoryDef.subcategories;
   }, [currentCategoryDef]);
 
-  // When category changes, reset subcategory
+  // When category changes, reset subcategory and smoothly scroll to catalog if scrolled past
   const handleCategoryChange = (catId: string) => {
     setActiveCategory(catId);
     setActiveSubcategory("Všetky");
+
+    if (typeof window !== "undefined") {
+      const navEl = document.getElementById("kategorie-ponuky");
+      if (navEl) {
+        const rect = navEl.getBoundingClientRect();
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const targetScroll = rect.top + scrollTop - 58;
+        if (scrollTop > targetScroll + 20) {
+          window.scrollTo({ top: targetScroll, behavior: "smooth" });
+        }
+      }
+    }
   };
 
   // Realtime product overrides from admin
@@ -191,8 +203,12 @@ export default function PonukaPage() {
         </div>
       </section>
 
-      {/* Sticky Mobile/Desktop Category Bar (Seed & Food App pattern) */}
-      <nav aria-label="Kategórie ponuky" className="sticky top-[60px] sm:top-[74px] z-30 bg-[#FAF8F5]/95 backdrop-blur-md border-b border-[#EAE5DC] py-3 px-4 sm:px-6 lg:px-8 shadow-xs">
+      {/* Sticky Mobile/Desktop Category Bar */}
+      <nav
+        id="kategorie-ponuky"
+        aria-label="Kategórie ponuky"
+        className="sticky top-[48px] sm:top-[56px] z-40 bg-[#FAF8F5]/95 backdrop-blur-md border-b border-[#EAE5DC] py-2.5 sm:py-3 px-4 sm:px-6 lg:px-8 shadow-xs"
+      >
         <div className="max-w-7xl mx-auto space-y-2">
           {/* Main Category Pills */}
           <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
