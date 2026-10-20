@@ -89,7 +89,7 @@ export default function Footer() {
         {/* Huge Organic Stylized Lettering */}
         <div className="relative z-10 w-full px-4 max-w-6xl mx-auto flex flex-col items-center">
           <span className="text-[10px] sm:text-xs font-sans font-bold uppercase tracking-[0.35em] text-[#e5a8db] mb-3">
-            Čisté ingrediencie · Viničné & Slovenský Grob
+            Čisté ingrediencie · Viničné
           </span>
 
           <h2
@@ -102,8 +102,16 @@ export default function Footer() {
             Pečieme pre vaše najkrajšie životné chvíle bez kompromisov a bez polotovarov.
           </p>
 
-          <div className="mt-6 sm:mt-8 text-[11px] text-white/40 font-mono tracking-widest flex items-center justify-center gap-3">
+          <div className="mt-6 sm:mt-8 text-[11px] text-white/40 font-mono tracking-widest flex flex-wrap items-center justify-center gap-3">
             <span>© 2026 Hanela s.r.o. · Viničné</span>
+            <span>·</span>
+            <Link href="/podmienky" className="hover:text-white/80 transition-colors underline-offset-4 hover:underline">
+              Podmienky
+            </Link>
+            <span>·</span>
+            <Link href="/gdpr" className="hover:text-white/80 transition-colors underline-offset-4 hover:underline">
+              GDPR
+            </Link>
             <span>·</span>
             <Link href="/admin" className="hover:text-white/80 transition-colors underline-offset-4 hover:underline">
               Správa výrobne

@@ -37,7 +37,7 @@ export default function Philosophy() {
               </h2>
 
               <p className="mt-4 text-xs sm:text-sm text-white/80 leading-relaxed font-normal max-w-xl">
-                Odmietame rastlinné náhrady, palmové tuky aj umelé prášky. V každom dezerte pracujeme výhradne s 82% farmárskym maslom, pravým talianskym mascarpone, 35% smotanou, čistou madagaskarskou vanilkou a belgickou čokoládou Callebaut.
+                Odmietame rastlinné náhrady, palmové tuky aj umelé prášky. V každom dezerte pracujeme výhradne s 82% maslom, pravým talianskym mascarpone, 35% smotanou, čistou madagaskarskou vanilkou a belgickou čokoládou Callebaut.
               </p>
 
               {/* Minimalist Trust Features List */}
@@ -47,7 +47,7 @@ export default function Philosophy() {
                     100%
                   </span>
                   <span className="text-[11px] text-white/75 leading-tight block mt-0.5">
-                    Pravé mascarpone & farmárske maslo
+                    Pravé mascarpone & 82% maslo
                   </span>
                 </div>
                 <div className="rounded-xl bg-white/5 border border-white/10 p-3">

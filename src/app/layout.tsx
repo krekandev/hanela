@@ -15,7 +15,7 @@ const lora = Lora({
 });
 
 export const metadata: Metadata = {
-  title: "Hanela | Remeselné koláčiky a torty Viničné & Slovenský Grob",
+  title: "Hanela | Remeselné koláčiky a torty Viničné",
   description:
     "Poctivé remeselné torty, víkendové degustačné mixy a svadobné výslužky bez kompromisov. Čistý dizajn, pravé mascarpone a belgická čokoláda.",
   keywords: [
@@ -23,7 +23,6 @@ export const metadata: Metadata = {
     "remeselné koláče",
     "torty na mieru",
     "Viničné",
-    "Slovenský Grob",
     "víkendový mix",
     "svadobné výslužky",
   ],
@@ -31,7 +30,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Hanela | Poctivé remeselné koláčiky a torty",
     description:
-      "Čistý dizajn, prémiová belgická čokoláda a pravé mascarpone. Zákazková výroba vo Viničnom a Slovenskom Grobe.",
+      "Čistý dizajn, prémiová belgická čokoláda a pravé mascarpone. Zákazková výroba vo Viničnom.",
     type: "website",
     locale: "sk_SK",
     siteName: "Hanela – koláčiky a torty",

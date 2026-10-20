@@ -12,10 +12,11 @@ import {
   Radio,
   User as UserIcon,
   LogIn,
+  Mail,
 } from "lucide-react";
 import { User } from "firebase/auth";
 
-export type AdminTab = "calendar" | "orders" | "capacity" | "pricing";
+export type AdminTab = "calendar" | "orders" | "capacity" | "contacts";
 
 interface AdminHeaderProps {
   activeTab: AdminTab;
@@ -26,13 +27,14 @@ interface AdminHeaderProps {
   onSignOut: () => void;
   isLiveFirestore: boolean;
   activeOrdersCount: number;
+  contactsCount?: number;
 }
 
 export const ADMIN_NAV_PILLARS = [
   { id: "calendar" as const, label: "Kalendár výroby", icon: CalendarIcon },
   { id: "orders" as const, label: "Objednávky", icon: ListOrdered },
   { id: "capacity" as const, label: "Kapacita dní", icon: Ban },
-  { id: "pricing" as const, label: "Zmena cien", icon: DollarSign },
+  { id: "contacts" as const, label: "Kontakty & E-maily", icon: Mail },
 ];
 
 export function AdminHeader({
@@ -44,6 +46,7 @@ export function AdminHeader({
   onSignOut,
   isLiveFirestore,
   activeOrdersCount,
+  contactsCount,
 }: AdminHeaderProps) {
   return (
     <header className="sticky top-0 z-40 bg-[#FAF8F5]/95 backdrop-blur-md border-b border-[#EAE5DC]">
@@ -194,6 +197,11 @@ export function AdminHeader({
                 {item.id === "orders" && activeOrdersCount > 0 && (
                   <span className="ml-1 inline-flex items-center justify-center px-1.5 py-0.2 text-[10px] font-bold rounded-full bg-[#FAF1F8] text-[#a62891] border border-[#ECD9E8]">
                     {activeOrdersCount}
+                  </span>
+                )}
+                {item.id === "contacts" && contactsCount !== undefined && contactsCount > 0 && (
+                  <span className="ml-1 inline-flex items-center justify-center px-1.5 py-0.2 text-[10px] font-bold rounded-full bg-[#FAF8F5] text-[#261B24] border border-[#DFD8CD]">
+                    {contactsCount}
                   </span>
                 )}
               </button>

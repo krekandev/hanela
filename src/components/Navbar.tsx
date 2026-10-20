@@ -6,7 +6,7 @@ import { X, Menu, ShoppingBag } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 
 interface NavbarProps {
-  onOpenBooking: () => void;
+  onOpenBooking?: () => void;
 }
 
 export default function Navbar({ onOpenBooking }: NavbarProps) {
@@ -45,7 +45,11 @@ export default function Navbar({ onOpenBooking }: NavbarProps) {
   ];
 
   const handleBooking = () => {
-    onOpenBooking();
+    if (onOpenBooking) {
+      onOpenBooking();
+    } else {
+      window.location.href = "/rezervacia";
+    }
     setMobileMenuOpen(false);
   };
 

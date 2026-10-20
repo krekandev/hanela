@@ -71,9 +71,9 @@ export const CATEGORIES: CategoryDefinition[] = [
     title: "Kusové zákusky & Mini dezerty",
     shortTitle: "Kusové zákusky",
     badge: "Candy bar & Catering",
-    description: "Remeselné mini dezerty, tartaletky a tradičné rezy pečené výhradne z farmárskeho masla.",
+    description: "Remeselné mini dezerty, tartaletky a tradičné rezy pečené výhradne z 82% masla.",
     subcategories: ["Všetky", "Odpaľované & Choux", "Tartaletky & Mini dezerty", "Tradičné rezy & Klasika"],
-  },
+  }
 ];
 
 export const PRODUCTS: Product[] = [
@@ -376,18 +376,6 @@ export const PRODUCTS: Product[] = [
             "name": "Personalizovaný zápich s menom",
             "price": 12.0,
             "priceFormatted": "+12 €"
-          },
-          {
-            "id": "zdob-postavicka",
-            "name": "Personalizovaná postavička",
-            "price": 15.0,
-            "priceFormatted": "+15 €"
-          },
-          {
-            "id": "zdob-coko-zapich",
-            "name": "Personalizovaný čoko zápich",
-            "price": 10.0,
-            "priceFormatted": "+10 €"
           }
         ]
       },
@@ -604,18 +592,6 @@ export const PRODUCTS: Product[] = [
             "name": "Personalizovaný zápich s menom",
             "price": 12.0,
             "priceFormatted": "+12 €"
-          },
-          {
-            "id": "zdob-postavicka",
-            "name": "Personalizovaná postavička",
-            "price": 15.0,
-            "priceFormatted": "+15 €"
-          },
-          {
-            "id": "zdob-coko-zapich",
-            "name": "Personalizovaný čoko zápich",
-            "price": 10.0,
-            "priceFormatted": "+10 €"
           }
         ]
       },
@@ -830,18 +806,6 @@ export const PRODUCTS: Product[] = [
             "name": "Personalizovaný zápich s menom",
             "price": 12.0,
             "priceFormatted": "+12 €"
-          },
-          {
-            "id": "zdob-postavicka",
-            "name": "Personalizovaná postavička",
-            "price": 15.0,
-            "priceFormatted": "+15 €"
-          },
-          {
-            "id": "zdob-coko-zapich",
-            "name": "Personalizovaný čoko zápich",
-            "price": 10.0,
-            "priceFormatted": "+10 €"
           }
         ]
       },
@@ -1057,18 +1021,6 @@ export const PRODUCTS: Product[] = [
             "name": "Personalizovaný zápich s menom",
             "price": 12.0,
             "priceFormatted": "+12 €"
-          },
-          {
-            "id": "zdob-postavicka",
-            "name": "Personalizovaná postavička",
-            "price": 15.0,
-            "priceFormatted": "+15 €"
-          },
-          {
-            "id": "zdob-coko-zapich",
-            "name": "Personalizovaný čoko zápich",
-            "price": 10.0,
-            "priceFormatted": "+10 €"
           }
         ]
       },

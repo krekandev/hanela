@@ -25,7 +25,7 @@ const products: ProductItem[] = [
     isTagHighlight: true,
     title: "Víkendový Mix 24 ks",
     subtitle: "Mix čerstvých mini tartaletiek, rezov a choux v Hanela krabičke",
-    image: "/images/products/featured-mix-nobg.webp",
+    image: "/images/products/mix-zakuskov-24-ks.webp",
     priceNote: "50 € za box (24 ks)",
     href: "/rezervacia?product=mix-zakuskov-24-ks",
   },
@@ -36,7 +36,7 @@ const products: ProductItem[] = [
     isTagHighlight: true,
     title: "Malinová torta",
     subtitle: "Mandľový korpus, malinová redukcia a mascarpone",
-    image: "/images/products/featured-malinova-nobg.webp",
+    image: "/images/products/malinova-torta-12-16-porcii.webp",
     priceNote: "45 € (12–16 porcií)",
     href: "/rezervacia?product=malinova-torta-12-16-porcii",
   },
@@ -47,7 +47,7 @@ const products: ProductItem[] = [
     isTagHighlight: false,
     title: "Pistáciový cheesecake",
     subtitle: "Zamatový cheesecake s pravým pistáciovým praliné",
-    image: "/images/products/featured-pistaciovy-nobg.webp",
+    image: "/images/products/pistaciovy-cheesecake-12-16-porcii.webp",
     priceNote: "43 € (12–16 porcií)",
     href: "/rezervacia?product=pistaciovy-cheesecake-12-16-porcii",
   },
@@ -58,7 +58,7 @@ const products: ProductItem[] = [
     isTagHighlight: false,
     title: "Karamelový veterník 100g",
     subtitle: "Nadýchané odpaľované cesto a domáci karamel",
-    image: "/images/products/featured-veternik-nobg.webp",
+    image: "/images/products/karamelovy-veternik-100g.webp",
     priceNote: "2,50 € / ks",
     href: "/rezervacia?product=karamelovy-veternik-100g",
   },
@@ -229,14 +229,14 @@ export default function FeaturedProducts({ onSelectProduct }: FeaturedProductsPr
                 </div>
 
                 {/* Product Photo */}
-                <div className="relative w-full aspect-square my-4 rounded-2xl overflow-hidden bg-gradient-to-b from-[#FAF8F5] to-[#F3EEE6] border border-[#EAE5DC]/80 flex items-center justify-center p-3 sm:p-4">
+                <div className="relative w-full aspect-square my-4 rounded-2xl overflow-hidden bg-gradient-to-b from-[#FAF8F5] to-[#F3EEE6] border border-[#EAE5DC]/80 flex items-center justify-center">
                   <div className="relative w-full h-full">
                     <Image
                       src={item.image}
                       alt={item.title}
                       fill
                       sizes="(max-width: 640px) 80vw, (max-width: 1024px) 50vw, 25vw"
-                      className="object-contain drop-shadow-[0_12px_22px_rgba(38,27,36,0.14)] group-hover:scale-108 group-hover:-translate-y-1 transition-all duration-500 ease-out"
+                      className="object-cover group-hover:scale-105 transition-all duration-500 ease-out"
                     />
                   </div>
                 </div>

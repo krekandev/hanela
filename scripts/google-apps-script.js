@@ -25,50 +25,88 @@
 function doPost(e) {
   try {
     var rawData = e.postData.contents;
-    var data = JSON.parse(rawData);
+    var raw = JSON.parse(rawData);
 
-    // 1. ZÁPIS DO GOOGLE SHEETS
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    // Normalizácia dát (ak príde { order: ... } alebo priamy objekt)
+    var data = raw.order ? raw.order : raw;
+    
+    var orderNumber = data.orderNumber || "HAN-" + new Date().getFullYear() + "-000";
+    var pickupDate = data.pickupDate || "";
+    var pickupTime = data.pickupTime || "";
+    var customer = data.customer || {};
+    var customerName = data.customerName || customer.name || "Zákazník";
+    var customerPhone = data.customerPhone || customer.phone || "";
+    var customerEmail = data.customerEmail || customer.email || "";
+    var allergies = data.allergies || customer.allergies || "";
+    var customerNotes = data.customerNotes || customer.notes || "";
+    var totalPrice = data.totalPrice || 0;
+    var items = data.items || [];
+    
+    var itemsSummary = data.itemsSummary || items.map(function(it) {
+      return (it.quantity || 1) + "x " + (it.name || "Položka");
+    }).join(", ");
 
-    // Vytvorenie hlavičky ak tabuľka nemá riadky
-    if (sheet.getLastRow() === 0) {
-      sheet.appendRow([
-        "Číslo objednávky",
-        "Vytvorené",
-        "Dátum odberu",
-        "Čas odberu",
-        "Meno zákazníka",
-        "Telefón",
-        "E-mail",
-        "Objednané položky",
-        "Celková suma (€)",
-        "Alergie",
-        "Poznámka zákazníka"
-      ]);
-      sheet.getRange(1, 1, 1, 11).setFontWeight("bold").setBackground("#F4EFE7");
+    var normalized = {
+      orderNumber: orderNumber,
+      pickupDate: pickupDate,
+      pickupTime: pickupTime,
+      customerName: customerName,
+      customerPhone: customerPhone,
+      customerEmail: customerEmail,
+      allergies: allergies,
+      customerNotes: customerNotes,
+      totalPrice: totalPrice,
+      items: items.map(function(it) {
+        return {
+          name: it.name || "Položka",
+          quantity: it.quantity || 1,
+          formattedPrice: (it.formattedPrice || (it.totalPrice ? it.totalPrice + " €" : "")) || "",
+          configuration: it.configuration || {
+            size: it.size,
+            korpus: it.korpus,
+            krem: it.krem,
+            diets: it.diets,
+            zdobenie: it.zdobenie
+          }
+        };
+      }),
+      itemsSummary: itemsSummary
+    };
+
+    // 1. ZÁPIS DO GOOGLE SHEETS (voliteľné - iba ak je skript spustený v tabuľke)
+    try {
+      var ss = SpreadsheetApp.getActiveSpreadsheet();
+      if (ss) {
+        var sheet = ss.getActiveSheet();
+        if (sheet.getLastRow() === 0) {
+          sheet.appendRow([
+            "Číslo objednávky", "Vytvorené", "Dátum odberu", "Čas odberu",
+            "Meno zákazníka", "Telefón", "E-mail", "Objednané položky",
+            "Celková suma (€)", "Alergie", "Poznámka zákazníka"
+          ]);
+          sheet.getRange(1, 1, 1, 11).setFontWeight("bold").setBackground("#F4EFE7");
+        }
+        sheet.appendRow([
+          normalized.orderNumber, new Date().toLocaleString("sk-SK"),
+          normalized.pickupDate, normalized.pickupTime, normalized.customerName,
+          normalized.customerPhone, normalized.customerEmail, normalized.itemsSummary,
+          normalized.totalPrice + " €", normalized.allergies || "-", normalized.customerNotes || "-"
+        ]);
+      }
+    } catch (sheetErr) {
+      Logger.log("Sheets notice: " + sheetErr);
     }
-
-    sheet.appendRow([
-      data.orderNumber,
-      new Date().toLocaleString("sk-SK"),
-      data.pickupDate,
-      data.pickupTime,
-      data.customerName,
-      data.customerPhone,
-      data.customerEmail,
-      data.itemsSummary,
-      data.totalPrice + " €",
-      data.allergies || "-",
-      data.customerNotes || "-"
-    ]);
 
     // 2. ODOSLANIE EMAILU ZÁKAZNÍKOVI CEZ GMAIL
-    if (data.customerEmail) {
-      sendCustomerConfirmationEmail(data);
+    if (normalized.customerEmail) {
+      sendCustomerConfirmationEmail(normalized);
     }
 
+    // 3. ODOSLANIE NOTIFIKÁCIE MAJITEĽKE
+    sendOwnerAlertEmail(normalized);
+
     return ContentService
-      .createTextOutput(JSON.stringify({ status: "success", orderNumber: data.orderNumber }))
+      .createTextOutput(JSON.stringify({ status: "success", orderNumber: normalized.orderNumber }))
       .setMimeType(ContentService.MimeType.JSON);
 
   } catch (err) {
@@ -173,4 +211,37 @@ function sendCustomerConfirmationEmail(data) {
     htmlBody: htmlBody,
     name: "Cukráreň Hanela"
   });
+}
+
+function sendOwnerAlertEmail(data) {
+  var ownerEmail = "hanelacakes@gmail.com";
+  var subject = "🔔 Nová objednávka #" + data.orderNumber + " – " + data.customerName + " (" + data.pickupDate + " o " + data.pickupTime + ")";
+  
+  var html = `
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #FAF8F5; border: 1px solid #EAE5DC; border-radius: 16px; padding: 24px; color: #261B24;">
+      <h2 style="margin-top: 0; color: #261B24;">🔔 Nová objednávka vo výrobe #${data.orderNumber}</h2>
+      <div style="background-color: #FFFFFF; border: 1px solid #DFD8CD; border-radius: 12px; padding: 16px; margin: 16px 0;">
+        <p style="margin: 4px 0;"><strong>Zákazník:</strong> ${data.customerName}</p>
+        <p style="margin: 4px 0;"><strong>Telefón:</strong> <a href="tel:${data.customerPhone}">${data.customerPhone}</a></p>
+        <p style="margin: 4px 0;"><strong>E-mail:</strong> ${data.customerEmail}</p>
+        <p style="margin: 4px 0;"><strong>Termín odberu:</strong> <span style="color: #a62891; font-weight: bold;">${data.pickupDate} o ${data.pickupTime}</span></p>
+        <p style="margin: 4px 0;"><strong>Celková suma:</strong> ${data.totalPrice} €</p>
+        ${data.allergies ? `<p style="margin: 4px 0; color: #7A2E2E;"><strong>⚠️ Alergie:</strong> ${data.allergies}</p>` : ""}
+        ${data.customerNotes ? `<p style="margin: 4px 0; font-style: italic;"><strong>Poznámka:</strong> &ldquo;${data.customerNotes}&rdquo;</p>` : ""}
+      </div>
+      <p style="margin: 16px 0;"><strong>Rozpis položiek:</strong> ${data.itemsSummary}</p>
+      <div style="text-align: center; margin-top: 24px;">
+        <a href="https://hanela.digify.sk/admin/" style="display: inline-block; background-color: #261B24; color: #FAF8F5; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; font-size: 13px;">Otvoriť v administrácii Hanela &rarr;</a>
+      </div>
+    </div>
+  `;
+
+  try {
+    GmailApp.sendEmail(ownerEmail, subject, "", {
+      htmlBody: html,
+      name: "Hanela Notifikácie"
+    });
+  } catch (err) {
+    Logger.log("Owner alert error: " + err);
+  }
 }

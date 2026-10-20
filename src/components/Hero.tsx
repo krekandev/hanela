@@ -51,7 +51,7 @@ export default function Hero({ onOpenBooking }: HeroProps) {
 
             {/* Subheading */}
             <p className="mt-6 text-base sm:text-xl text-[#261B24]/75 font-normal leading-relaxed max-w-xl tracking-tight">
-              Čistý dizajn, prémiová belgická čokoláda a pravé mascarpone. Zákazková výroba vo Viničnom a Slovenskom Grobe.
+              Čistý dizajn, prémiová belgická čokoláda a pravé mascarpone. Zákazková výroba vo Viničnom.
             </p>
 
             {/* Seed Action Row */}

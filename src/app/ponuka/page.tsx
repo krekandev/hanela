@@ -6,8 +6,8 @@ import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { PRODUCTS, CATEGORIES, Product, CategoryDefinition } from "@/data/products";
-import { getProductOverrides } from "@/lib/orders-service";
-import { ProductPriceOverride } from "@/lib/types";
+import { getProductOverrides, subscribePrices } from "@/lib/orders-service";
+import { ProductPriceOverride, ProductPriceDoc } from "@/lib/types";
 import {
   Search,
   Filter,
@@ -77,10 +77,15 @@ export default function PonukaPage() {
   const [productOverrides, setProductOverrides] = useState<Record<string, ProductPriceOverride>>({});
 
   useEffect(() => {
+    // Initial local read
     setProductOverrides(getProductOverrides());
-    const listener = () => setProductOverrides(getProductOverrides());
-    window.addEventListener("hanela-storage-update", listener);
-    return () => window.removeEventListener("hanela-storage-update", listener);
+
+    // Subscribe to Firestore prices in real time
+    const unsub = subscribePrices((data) => {
+      setProductOverrides(data);
+    });
+
+    return () => unsub();
   }, []);
 
   // Merged products with admin pricing & availability overrides
@@ -136,7 +141,7 @@ export default function PonukaPage() {
                 Poctivé torty, cheesecakes a mini dezerty.
               </h1>
               <p className="mt-4 text-sm sm:text-base text-[#261B24]/75 max-w-xl leading-relaxed">
-                Všetkých 41 remeselných výrobkov pečených z pravého mascarpone, 82% farmárskeho masla a belgickej čokolády Callebaut s osobným odberom vo Viničnom.
+                Všetkých 41 remeselných výrobkov pečených z pravého mascarpone, 82% masla a belgickej čokolády Callebaut s osobným odberom vo Viničnom.
               </p>
             </div>
 
@@ -541,7 +546,7 @@ export default function PonukaPage() {
                   Popis & zloženie
                 </span>
                 <p className="text-xs sm:text-sm text-[#261B24]/80 leading-relaxed whitespace-pre-line">
-                  {selectedProduct.description || "Pečieme z poctivých surovín, pravého mascarpone a farmárskeho masla. Bez margarínov a rastlinných náhrad."}
+                  {selectedProduct.description || "Pečieme z poctivých surovín, pravého mascarpone a 82% masla. Bez margarínov a rastlinných náhrad."}
                 </p>
               </div>
 

@@ -263,3 +263,29 @@ export interface SendEmailResponse {
   error?: string;
   warning?: string;
 }
+
+// ============================================================================
+// 6. CUSTOMER CONTACTS & EMAIL CAMPAIGNS
+// ============================================================================
+
+export interface ManualContact {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  note?: string;
+  createdAt: string;
+}
+
+export interface CustomerContact {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  ordersCount: number;
+  totalSpent: number;
+  lastOrderDate: string;
+  source: "objednavka" | "manual";
+  notes?: string;
+}
+

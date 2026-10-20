@@ -37,7 +37,7 @@ export default function Home() {
             Pripravené na váš výnimočný okamih.
           </h2>
           <p className="text-sm sm:text-base text-white/70 max-w-xl mx-auto leading-relaxed mb-10 font-normal">
-            Vyberte si víkendový degustačný box, poschodovú svadobnú tortu alebo elegantný candy bar vo Viničnom a Slovenskom Grobe.
+            Vyberte si víkendový degustačný box, poschodovú svadobnú tortu alebo elegantný candy bar vo Viničnom.
           </p>
           <a
             href="/rezervacia"

@@ -18,6 +18,7 @@ import {
   ProductPriceOverride,
   CakeSizeOverride,
   CustomerDetails,
+  ManualContact,
 } from "./types";
 import { CartItem } from "@/context/CartContext";
 import { PRODUCTS } from "@/data/products";
@@ -28,6 +29,7 @@ const STORAGE_KEY_BLOCKED_DATES = "hanela_admin_blocked_dates_v1";
 const STORAGE_KEY_PRICES = "hanela_admin_prices_v1";
 const STORAGE_KEY_PRODUCT_OVERRIDES = "hanela_admin_product_overrides_v1";
 const STORAGE_KEY_CAKE_SIZES = "hanela_admin_cake_sizes_v1";
+const STORAGE_KEY_MANUAL_CONTACTS = "hanela_admin_manual_contacts_v1";
 const STORAGE_KEY_SETTINGS = "hanela_admin_settings_v1";
 
 // Helper: generate dates relative to today
@@ -48,130 +50,10 @@ export const DEFAULT_CAKE_SIZES: CakeSizeOverride[] = [
   { id: "size-30", name: "24–30 porcií (Ø 27 cm)", extra: 95, total: 120 },
 ];
 
-// Seed sample orders for instant interactive testing
-export const INITIAL_DEMO_ORDERS: Order[] = [
-  {
-    id: "ord-101",
-    orderNumber: "HAN-2026-001",
-    createdAt: new Date(Date.now() - 3600000 * 24).toISOString(),
-    pickupDate: getRelativeDateStr(0),
-    pickupTime: "15:00",
-    status: "pripravena",
-    totalPrice: 115,
-    customer: {
-      name: "Zuzana Kováčová",
-      phone: "+421 905 123 456",
-      email: "zuzana.kovacova@gmail.com",
-      allergies: "Bez orechov",
-      notes: "Prosím pridať zlaté sviečky a číslo 30.",
-    },
-    items: [
-      {
-        id: "demo-item-1",
-        productId: "ovocna-sviezost",
-        slug: "ovocna-sviezost",
-        name: "Ovocná sviežosť",
-        category: "torty-mieru",
-        unitPrice: 80,
-        totalPrice: 80,
-        quantity: 1,
-        image: "/images/products/ovocna-sviezost.webp",
-        size: "10–15 porcií (Ø 21 cm)",
-        korpus: "Mandľový korpus",
-        krem: "Mascarpone s bielou čokoládou",
-        doplnky: ["Malinová redukcia", "Čerstvé lesné ovocie"],
-        diets: ["Bezlepková úprava"],
-        zdobenie: ["Personalizovaný zápich s číslom (+6 €)"],
-        cakeNote: "Jemné pastelové kvety po obvode",
-      },
-      {
-        id: "demo-item-2",
-        productId: "vikendovy-mix-velky",
-        slug: "vikendovy-mix-velky",
-        name: "Víkendový degustačný box (16 ks)",
-        category: "mix",
-        unitPrice: 35,
-        totalPrice: 35,
-        quantity: 1,
-        image: "/images/products/vikendovy-mix-velky.webp",
-        servings: "16 ks",
-      },
-    ],
-    internalNote: "Tortu chladiť na 4 °C, ovocie položené dnes ráno.",
-  },
-  {
-    id: "ord-102",
-    orderNumber: "HAN-2026-002",
-    createdAt: new Date(Date.now() - 3600000 * 18).toISOString(),
-    pickupDate: getRelativeDateStr(1),
-    pickupTime: "16:00",
-    status: "vyroba",
-    totalPrice: 100,
-    customer: {
-      name: "Martin Hruška",
-      phone: "+421 911 889 220",
-      email: "martin.hruska@azet.sk",
-      allergies: "Žiadne",
-      notes: "Vyzdvihne manželka Petra.",
-    },
-    items: [
-      {
-        id: "demo-item-3",
-        productId: "cokoladovy-sen",
-        slug: "cokoladovy-sen",
-        name: "Čokoládový sen",
-        category: "torty-mieru",
-        unitPrice: 100,
-        totalPrice: 100,
-        quantity: 1,
-        image: "/images/products/cokoladovy-sen.webp",
-        size: "16–20 porcií (Ø 24 cm)",
-        korpus: "Čokoládový korpus",
-        krem: "Parížsky krém z belgickej čokolády",
-        doplnky: ["Chrumkavá vrstva z lieskovcov"],
-        zdobenie: ["Personalizovaný zápich s menom (+12 €)"],
-        cakeNote: "Nápis 'Všetko najlepšie Miško'",
-      },
-    ],
-  },
-  {
-    id: "ord-103",
-    orderNumber: "HAN-2026-003",
-    createdAt: new Date(Date.now() - 3600000 * 6).toISOString(),
-    pickupDate: getRelativeDateStr(2),
-    pickupTime: "11:00",
-    status: "nova",
-    totalPrice: 42,
-    customer: {
-      name: "Lucia Novotná",
-      phone: "+421 908 445 112",
-      email: "lucia.novotna@centrum.sk",
-      notes: "Platba hotovosťou pri prevzatí.",
-    },
-    items: [
-      {
-        id: "demo-item-4",
-        productId: "malinovy-cheesecake",
-        slug: "malinovy-cheesecake",
-        name: "Malinový pečený cheesecake",
-        category: "torty-cheesecakes",
-        unitPrice: 42,
-        totalPrice: 42,
-        quantity: 1,
-        image: "/images/products/malinovy-cheesecake.webp",
-        size: "Celá torta (12 rezov)",
-      },
-    ],
-  },
-];
+// Empty initial state for production
+export const INITIAL_DEMO_ORDERS: Order[] = [];
 
-export const INITIAL_DEMO_BLOCKED_DATES: BlockedDate[] = [
-  {
-    date: getRelativeDateStr(4),
-    reason: "Plná kapacita výroby",
-    createdAt: new Date().toISOString(),
-  },
-];
+export const INITIAL_DEMO_BLOCKED_DATES: BlockedDate[] = [];
 
 // In-memory store fallback for SSR, server routes, and test runtimes
 const memoryStore = new Map<string, string>();
@@ -633,7 +515,7 @@ export async function saveProductPrice(
 
   if (isFirebaseConfigured && db) {
     try {
-      await setDoc(doc(db, "prices", productId), priceDoc, { merge: true });
+      await setDoc(doc(db, "prices", productId), cleanForFirestore(priceDoc), { merge: true });
     } catch (err) {
       console.warn("[Firestore] saveProductPrice failed, saving to local store:", err);
     }
@@ -692,6 +574,132 @@ export function saveCakeSizes(sizes: CakeSizeOverride[]): void {
 }
 
 /* -------------------------------------------------------------
+ * MANUAL CONTACTS & NEWSLETTER SUBSCRIBERS
+ * ----------------------------------------------------------- */
+export async function getManualContacts(): Promise<ManualContact[]> {
+  if (isFirebaseConfigured && db) {
+    try {
+      const q = query(collection(db, "contacts"), orderBy("createdAt", "desc"));
+      const snapshot = await getDocs(q);
+      if (!snapshot.empty) {
+        const contacts = snapshot.docs.map((docSnap) => ({
+          id: docSnap.id,
+          ...(docSnap.data() as Omit<ManualContact, "id">),
+        }));
+        saveToStorage(STORAGE_KEY_MANUAL_CONTACTS, contacts);
+        return contacts;
+      }
+    } catch (err) {
+      console.warn("[Firestore] fetch contacts error:", err);
+    }
+  }
+  return loadFromStorage<ManualContact[]>(STORAGE_KEY_MANUAL_CONTACTS, []);
+}
+
+export function subscribeManualContacts(callback: (contacts: ManualContact[]) => void): () => void {
+  let isUnsubscribed = false;
+  let unsubFirestore: (() => void) | null = null;
+
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  callback(loadFromStorage<ManualContact[]>(STORAGE_KEY_MANUAL_CONTACTS, []));
+
+  const handleStorageUpdate = () => {
+    if (isUnsubscribed) return;
+    callback(loadFromStorage<ManualContact[]>(STORAGE_KEY_MANUAL_CONTACTS, []));
+  };
+
+  window.addEventListener("hanela-storage-update", handleStorageUpdate);
+  window.addEventListener("storage", handleStorageUpdate);
+
+  if (isFirebaseConfigured && db) {
+    try {
+      const q = query(collection(db, "contacts"), orderBy("createdAt", "desc"));
+      unsubFirestore = onSnapshot(
+        q,
+        (snapshot) => {
+          if (isUnsubscribed) return;
+          const contacts = snapshot.docs.map((d) => ({
+            id: d.id,
+            ...(d.data() as Omit<ManualContact, "id">),
+          }));
+          saveToStorage(STORAGE_KEY_MANUAL_CONTACTS, contacts);
+          callback(contacts);
+        },
+        (error) => {
+          console.warn("[Firestore] subscribeManualContacts snapshot error:", error);
+          if (!isUnsubscribed) {
+            handleStorageUpdate();
+          }
+        }
+      );
+    } catch (err) {
+      console.warn("[Firestore] Failed to attach contacts listener:", err);
+    }
+  }
+
+  return () => {
+    isUnsubscribed = true;
+    if (unsubFirestore) {
+      try {
+        unsubFirestore();
+      } catch (e) {
+        console.warn("[Firestore] Error unsubscribing contacts:", e);
+      }
+      unsubFirestore = null;
+    }
+    window.removeEventListener("hanela-storage-update", handleStorageUpdate);
+    window.removeEventListener("storage", handleStorageUpdate);
+  };
+}
+
+export async function saveManualContact(contactData: {
+  name: string;
+  email: string;
+  phone?: string;
+  note?: string;
+}): Promise<ManualContact> {
+  const current = loadFromStorage<ManualContact[]>(STORAGE_KEY_MANUAL_CONTACTS, []);
+  const id = `cnt-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+  const newContact: ManualContact = {
+    id,
+    name: contactData.name.trim(),
+    email: contactData.email.trim().toLowerCase(),
+    phone: contactData.phone?.trim() || "",
+    note: contactData.note?.trim() || "",
+    createdAt: new Date().toISOString(),
+  };
+
+  if (isFirebaseConfigured && db) {
+    try {
+      await setDoc(doc(db, "contacts", id), cleanForFirestore(newContact));
+    } catch (err) {
+      console.warn("[Firestore] saveManualContact failed, fallback to local:", err);
+    }
+  }
+
+  const updated = [newContact, ...current.filter((c) => c.id !== id)];
+  saveToStorage(STORAGE_KEY_MANUAL_CONTACTS, updated);
+  return newContact;
+}
+
+export async function deleteManualContact(contactId: string): Promise<void> {
+  const current = loadFromStorage<ManualContact[]>(STORAGE_KEY_MANUAL_CONTACTS, []);
+  if (isFirebaseConfigured && db) {
+    try {
+      await deleteDoc(doc(db, "contacts", contactId));
+    } catch (err) {
+      console.warn("[Firestore] deleteManualContact failed:", err);
+    }
+  }
+  const updated = current.filter((c) => c.id !== contactId);
+  saveToStorage(STORAGE_KEY_MANUAL_CONTACTS, updated);
+}
+
+
+/* -------------------------------------------------------------
  * DEPRECATED GOOGLE SHEETS SETTINGS (Cleaned up in M1)
  * ----------------------------------------------------------- */
 /** @deprecated Legacy Google Sheets settings removed in favor of Resend API */
@@ -703,7 +711,7 @@ export interface AdminSettings {
 /** @deprecated */
 export const DEFAULT_SETTINGS: AdminSettings = {
   webhookUrl: "",
-  notificationEmail: "cukraren.hanela@gmail.com",
+  notificationEmail: "hanelacakes@gmail.com",
 };
 
 /** @deprecated */

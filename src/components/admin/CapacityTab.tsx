@@ -3,11 +3,12 @@
 import React, { useState } from "react";
 import {
   Ban,
-  Calendar,
+  Calendar as CalendarIcon,
   Trash2,
   Plus,
   AlertCircle,
   CheckCircle2,
+  CalendarRange,
 } from "lucide-react";
 import { BlockedDate } from "@/lib/types";
 
@@ -19,7 +20,7 @@ interface CapacityTabProps {
 
 const PRESET_REASONS = [
   "Plná kapacita výroby",
-  "Dovolenka majiteľky",
+  "Dovolenka",
   "Sanitárny deň",
 ];
 
@@ -28,11 +29,15 @@ export function CapacityTab({
   onBlockDate,
   onUnblockDate,
 }: CapacityTabProps) {
+  const [mode, setMode] = useState<"single" | "range">("single");
   const [targetDate, setTargetDate] = useState<string>("");
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
   const [reason, setReason] = useState<string>("Plná kapacita výroby");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [unblockingDate, setUnblockingDate] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   // Minimum date allowed: today
   const todayStr = (() => {
@@ -43,21 +48,70 @@ export function CapacityTab({
   const handleBlockSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
+    setSuccessMsg(null);
 
-    if (!targetDate || !/^\d{4}-\d{2}-\d{2}$/.test(targetDate)) {
-      setErrorMsg("Zadajte platný dátum v tvare YYYY-MM-DD.");
-      return;
-    }
+    const activeReason = reason.trim() || "Plná kapacita výroby";
 
-    setIsSubmitting(true);
-    try {
-      await onBlockDate(targetDate, reason.trim() || "Plná kapacita výroby");
-      setTargetDate("");
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Chyba pri blokovaní dňa";
-      setErrorMsg(msg);
-    } finally {
-      setIsSubmitting(false);
+    if (mode === "single") {
+      if (!targetDate || !/^\d{4}-\d{2}-\d{2}$/.test(targetDate)) {
+        setErrorMsg("Zadajte platný dátum v tvare YYYY-MM-DD.");
+        return;
+      }
+
+      setIsSubmitting(true);
+      try {
+        await onBlockDate(targetDate, activeReason);
+        setTargetDate("");
+        setSuccessMsg(`Deň ${targetDate} bol úspešne zablokovaný.`);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "Chyba pri blokovaní dňa";
+        setErrorMsg(msg);
+      } finally {
+        setIsSubmitting(false);
+      }
+    } else {
+      // Range mode
+      if (!startDate || !endDate) {
+        setErrorMsg("Vyberte začiatok aj koniec intervalu.");
+        return;
+      }
+      if (startDate > endDate) {
+        setErrorMsg("Dátum 'Od' musí byť pred alebo rovný dátumu 'Do'.");
+        return;
+      }
+
+      // Generate all dates in range
+      const datesToBlock: string[] = [];
+      const curr = new Date(startDate);
+      const last = new Date(endDate);
+
+      while (curr <= last) {
+        const y = curr.getFullYear();
+        const m = String(curr.getMonth() + 1).padStart(2, "0");
+        const d = String(curr.getDate()).padStart(2, "0");
+        datesToBlock.push(`${y}-${m}-${d}`);
+        curr.setDate(curr.getDate() + 1);
+      }
+
+      if (datesToBlock.length > 90) {
+        setErrorMsg("Maximálny rozsah na jedno zablokovanie je 90 dní.");
+        return;
+      }
+
+      setIsSubmitting(true);
+      try {
+        for (const d of datesToBlock) {
+          await onBlockDate(d, activeReason);
+        }
+        setStartDate("");
+        setEndDate("");
+        setSuccessMsg(`Úspešne bolo zablokovaných ${datesToBlock.length} dní.`);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "Chyba pri blokovaní intervalu";
+        setErrorMsg(msg);
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -79,19 +133,47 @@ export function CapacityTab({
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-      {/* FORM: 1-Click Day Blocking (5 cols on lg) */}
+      {/* FORM: Day / Range Blocking (5 cols on lg) */}
       <div className="lg:col-span-5 bg-[#FFFFFF] rounded-2xl border border-[#EAE5DC] shadow-xs p-6 space-y-5">
         <div>
           <div className="flex items-center gap-2">
             <Ban className="w-5 h-5 text-[#a62891]" />
             <h3 className="font-serif text-lg font-bold text-[#261B24]">
-              Zablokovať termín
+              Zablokovať termíny
             </h3>
           </div>
           <p className="text-xs text-[#6B5B65] mt-1 font-sans">
-            Zablokovaný deň sa okamžite premietne do zákazníckeho kalendára na
+            Zablokované dni sa okamžite premietnu do zákazníckeho kalendára na
             stránke rezervácie.
           </p>
+        </div>
+
+        {/* Mode switch: Single day vs Date Range */}
+        <div className="grid grid-cols-2 gap-1.5 p-1 bg-[#FAF8F5] rounded-xl border border-[#EAE5DC]">
+          <button
+            type="button"
+            onClick={() => { setMode("single"); setErrorMsg(null); setSuccessMsg(null); }}
+            className={`flex items-center justify-center gap-1.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+              mode === "single"
+                ? "bg-white text-[#261B24] shadow-xs border border-[#DFD8CD]"
+                : "text-[#6B5B65] hover:text-[#261B24]"
+            }`}
+          >
+            <CalendarIcon className="w-3.5 h-3.5 text-[#a62891]" />
+            <span>Jeden deň</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => { setMode("range"); setErrorMsg(null); setSuccessMsg(null); }}
+            className={`flex items-center justify-center gap-1.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+              mode === "range"
+                ? "bg-white text-[#261B24] shadow-xs border border-[#DFD8CD]"
+                : "text-[#6B5B65] hover:text-[#261B24]"
+            }`}
+          >
+            <CalendarRange className="w-3.5 h-3.5 text-[#a62891]" />
+            <span>Rozsah (dovolenka)</span>
+          </button>
         </div>
 
         {errorMsg && (
@@ -101,21 +183,65 @@ export function CapacityTab({
           </div>
         )}
 
-        <form onSubmit={handleBlockSubmit} className="space-y-4">
-          {/* Date Picker Input */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold uppercase tracking-wider text-[#6B5B65] block">
-              Dátum na zablokovanie
-            </label>
-            <input
-              type="date"
-              required
-              min={todayStr}
-              value={targetDate}
-              onChange={(e) => setTargetDate(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-[#FAF8F5] text-sm text-[#261B24] rounded-xl border border-[#EAE5DC] focus:bg-[#FFFFFF] focus:outline-none focus:border-[#a62891] transition-colors"
-            />
+        {successMsg && (
+          <div className="p-3 bg-[#F3F6F3] border border-[#DCE4DC] text-[#345139] rounded-xl text-xs flex items-start gap-2">
+            <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+            <span>{successMsg}</span>
           </div>
+        )}
+
+        <form onSubmit={handleBlockSubmit} className="space-y-4">
+          {mode === "single" ? (
+            /* Single Date Input */
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wider text-[#6B5B65] block">
+                Dátum na zablokovanie
+              </label>
+              <input
+                type="date"
+                required
+                min={todayStr}
+                value={targetDate}
+                onChange={(e) => setTargetDate(e.target.value)}
+                className="w-full px-3.5 py-2.5 bg-[#FAF8F5] text-sm text-[#261B24] rounded-xl border border-[#EAE5DC] focus:bg-[#FFFFFF] focus:outline-none focus:border-[#a62891] transition-colors"
+              />
+            </div>
+          ) : (
+            /* Date Range Inputs */
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-[#6B5B65] block">
+                    Od (prvý deň)
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    min={todayStr}
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="w-full px-3 py-2 text-xs sm:text-sm bg-[#FAF8F5] text-[#261B24] rounded-xl border border-[#EAE5DC] focus:bg-[#FFFFFF] focus:outline-none focus:border-[#a62891] transition-colors"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-[#6B5B65] block">
+                    Do (posledný deň)
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    min={startDate || todayStr}
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="w-full px-3 py-2 text-xs sm:text-sm bg-[#FAF8F5] text-[#261B24] rounded-xl border border-[#EAE5DC] focus:bg-[#FFFFFF] focus:outline-none focus:border-[#a62891] transition-colors"
+                  />
+                </div>
+              </div>
+              <p className="text-[11px] text-[#6B5B65] font-sans">
+                Ideálne na dovolenku, sviatky alebo odstávku. Všetky dni v intervale sa zablokujú naraz.
+              </p>
+            </div>
+          )}
 
           {/* Preset Reason Chips */}
           <div className="space-y-1.5">
@@ -157,11 +283,17 @@ export function CapacityTab({
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={isSubmitting || !targetDate}
+            disabled={isSubmitting || (mode === "single" ? !targetDate : (!startDate || !endDate))}
             className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#261B24] hover:bg-[#3d2c3a] text-[#FAF8F5] text-sm font-medium rounded-xl transition-all shadow-xs disabled:opacity-40 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            <span>{isSubmitting ? "Zapisujem do Firestore..." : "Zablokovať vybraný deň"}</span>
+            <span>
+              {isSubmitting
+                ? "Zapisujem do Firestore..."
+                : mode === "single"
+                ? "Zablokovať vybraný deň"
+                : "Zablokovať celý interval dní"}
+            </span>
           </button>
         </form>
       </div>
@@ -194,7 +326,7 @@ export function CapacityTab({
             </p>
           </div>
         ) : (
-          <div className="space-y-2.5">
+          <div className="space-y-2.5 max-h-[600px] overflow-y-auto pr-1">
             {sortedBlockedDates.map((item) => {
               const isPast = item.date < todayStr;
               const formattedDate = (() => {

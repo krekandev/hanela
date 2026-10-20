@@ -253,6 +253,12 @@ export function PricingTab({ prices, onSavePrice }: PricingTabProps) {
                     min="0"
                     value={draftVal !== undefined ? draftVal : currentPrice}
                     onChange={(e) => handlePriceChange(product.id, e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && hasUnsavedPrice && !isSaving) {
+                        e.preventDefault();
+                        handleSaveProduct(product.id, currentPrice, isAvailable);
+                      }
+                    }}
                     className={`w-full pl-7 pr-3 py-1.5 text-sm font-mono font-bold rounded-lg border text-[#261B24] focus:outline-none transition-colors ${
                       hasUnsavedPrice
                         ? "border-[#a62891] bg-[#FAF1F8]/50"

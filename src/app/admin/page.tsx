@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { User, onAuthStateChanged, signInWithPopup, signOut } from "firebase/auth";
 import { AlertCircle } from "lucide-react";
 import { auth, googleProvider, isFirebaseConfigured } from "@/lib/firebase";
@@ -10,11 +10,15 @@ import {
   OrderStatus,
   BlockedDate,
   ProductPriceDoc,
+  ManualContact,
 } from "@/lib/types";
 import {
   subscribeOrders,
   subscribeBlockedDates,
   subscribePrices,
+  subscribeManualContacts,
+  saveManualContact,
+  deleteManualContact,
   updateOrderStatus,
   updateOrderInternalNote,
   blockDate,
@@ -27,7 +31,7 @@ import { AdminAuthGuard, formatFirebaseAuthErrorMessage } from "@/components/adm
 import { CalendarTab } from "@/components/admin/CalendarTab";
 import { OrdersTab } from "@/components/admin/OrdersTab";
 import { CapacityTab } from "@/components/admin/CapacityTab";
-import { PricingTab } from "@/components/admin/PricingTab";
+import { ContactsTab } from "@/components/admin/ContactsTab";
 import { PrintReceipt } from "@/components/admin/PrintReceipt";
 
 export default function AdminPage() {
@@ -49,6 +53,7 @@ export default function AdminPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [blockedDates, setBlockedDates] = useState<BlockedDate[]>([]);
   const [prices, setPrices] = useState<Record<string, ProductPriceDoc>>({});
+  const [manualContacts, setManualContacts] = useState<ManualContact[]>([]);
 
   // Calendar selected day
   const [selectedDayStr, setSelectedDayStr] = useState<string>(() => {
@@ -92,7 +97,7 @@ export default function AdminPage() {
     }
   }, []);
 
-  // 2. Subscribe to real-time collections (orders, blocked_dates, prices)
+  // 2. Subscribe to real-time collections (orders, blocked_dates, prices, manual contacts)
   useEffect(() => {
     const unsubOrders = subscribeOrders((data) => {
       setOrders(data);
@@ -106,10 +111,15 @@ export default function AdminPage() {
       setPrices(data);
     });
 
+    const unsubContacts = subscribeManualContacts((data) => {
+      setManualContacts(data);
+    });
+
     return () => {
       unsubOrders();
       unsubBlocked();
       unsubPrices();
+      unsubContacts();
     };
   }, []);
 
@@ -191,10 +201,42 @@ export default function AdminPage() {
     await saveProductPrice(productId, price, isAvailable);
   };
 
+  // Manual contact handlers
+  const handleAddManualContact = async (contact: {
+    name: string;
+    email: string;
+    phone?: string;
+    note?: string;
+  }) => {
+    await saveManualContact(contact);
+  };
+
+  const handleDeleteManualContact = async (id: string) => {
+    await deleteManualContact(id);
+  };
+
   // Compute active orders count for header badge
   const activeOrdersCount = orders.filter(
     (o) => o.status === "nova" || o.status === "vyroba"
   ).length;
+
+  // Compute total unique contacts count for header badge
+  const uniqueContactsCount = useMemo(() => {
+    const set = new Set<string>();
+    orders.forEach((o) => {
+      if (o.customer?.email) {
+        const e = o.customer.email.trim().toLowerCase();
+        if (e && e.includes("@")) set.add(e);
+      }
+    });
+    manualContacts.forEach((m) => {
+      if (m.email) {
+        const e = m.email.trim().toLowerCase();
+        if (e && e.includes("@")) set.add(e);
+      }
+    });
+    return set.size;
+  }, [orders, manualContacts]);
 
   return (
     <AdminAuthGuard
@@ -214,6 +256,7 @@ export default function AdminPage() {
           onSignOut={handleSignOut}
           isLiveFirestore={isFirebaseConfigured}
           activeOrdersCount={activeOrdersCount}
+          contactsCount={uniqueContactsCount}
         />
 
         {/* Main Workspace Container */}
@@ -271,10 +314,12 @@ export default function AdminPage() {
             />
           )}
 
-          {activeTab === "pricing" && (
-            <PricingTab
-              prices={prices}
-              onSavePrice={handleSavePrice}
+          {activeTab === "contacts" && (
+            <ContactsTab
+              orders={orders}
+              manualContacts={manualContacts}
+              onAddManualContact={handleAddManualContact}
+              onDeleteManualContact={handleDeleteManualContact}
             />
           )}
         </main>

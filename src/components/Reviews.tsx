@@ -16,7 +16,7 @@ const reviews = [
     author: "Mgr. Peter Dubovský",
     event: "Jubilejná narodeninová torta 50-tka",
     date: "Október 2025",
-    text: "Objednával som pistáciovo-malinovú tortu pre manželku. Žiadne margaríny, žiadna umelá chémia, iba poctivé farmárske suroviny a pravá vanilka. Hladký systém vyzdvihnutia vo Viničnom bez čakania.",
+    text: "Objednával som pistáciovo-malinovú tortu pre manželku. Žiadne margaríny, žiadna umelá chémia, iba poctivé suroviny a pravá vanilka. Hladký systém vyzdvihnutia vo Viničnom bez čakania.",
     rating: "5.0",
     source: "Overená Google recenzia",
   },

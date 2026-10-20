@@ -8,8 +8,8 @@ import { isEmailAuthorizedAdmin } from "@/lib/admin-whitelist";
 
 export interface AdminAuthGuardProps {
   currentUser: User | null;
-  isDemoMode: boolean;
-  onEnterDemoMode: () => void;
+  isDemoMode?: boolean;
+  onEnterDemoMode?: () => void;
   authInitialized?: boolean;
   children: React.ReactNode;
 }
@@ -47,18 +47,14 @@ export function formatFirebaseAuthErrorMessage(err: unknown): string {
 
 export function AdminAuthGuard({
   currentUser,
-  isDemoMode,
-  onEnterDemoMode,
   authInitialized = true,
   children,
 }: AdminAuthGuardProps) {
   const [authError, setAuthError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  const [pinInput, setPinInput] = useState<string>("");
-  const [showPinModal, setShowPinModal] = useState<boolean>(false);
 
   // 1. Initial auth state evaluation spinner (eliminates screen flicker)
-  if (authInitialized === false && !currentUser && !isDemoMode) {
+  if (authInitialized === false && !currentUser) {
     return (
       <div className="min-h-screen bg-[#FAF8F5] flex items-center justify-center p-4">
         <div className="text-center space-y-4">
@@ -78,8 +74,8 @@ export function AdminAuthGuard({
     );
   }
 
-  // 2. If user is authenticated via Google or has entered authorized session, render content
-  if (currentUser || isDemoMode) {
+  // 2. If user is authenticated via Google and on whitelist, render content
+  if (currentUser) {
     return <>{children}</>;
   }
 
@@ -118,16 +114,6 @@ export function AdminAuthGuard({
     }
   };
 
-  const handleVerifyPin = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Emergency PIN protection so unauthorized people cannot enter
-    if (pinInput.trim() === "hanela2026") {
-      onEnterDemoMode();
-    } else {
-      setAuthError("Nesprávny bezpečnostný PIN kód.");
-    }
-  };
-
   return (
     <div className="min-h-screen bg-[#FAF8F5] flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-[#FFFFFF] rounded-2xl border border-[#EAE5DC] shadow-sm p-8 text-center">
@@ -142,16 +128,6 @@ export function AdminAuthGuard({
         <p className="text-sm text-[#6B5B65] mb-6 font-sans">
           Prístup vyhradený pre majiteľku cukrárne. Správa výroby, objednávok, termínov a cien.
         </p>
-
-        {/* Local mode informational status badge when Firebase is not configured */}
-        {!isFirebaseConfigured && (
-          <div className="mb-6 p-3 rounded-xl bg-[#F8F4EE] border border-[#EADFCF] text-[#6E5335] text-xs text-left flex items-start gap-2.5">
-            <span className="w-2 h-2 rounded-full bg-[#6E5335] shrink-0 mt-1.5" />
-            <span>
-              Aplikácia beží v offline režime bez pripojenia k Firebase. Pre vstup použite núdzový PIN kód majiteľky.
-            </span>
-          </div>
-        )}
 
         {/* Error notification banner */}
         {authError && (
@@ -197,49 +173,8 @@ export function AdminAuthGuard({
           </button>
 
           <p className="text-[11px] text-[#8C7A86] leading-relaxed">
-            Prístup do systému je povolený výhradne pre registrované administrátorské e-maily cukrárne Hanela.
+            Prístup do systému je povolený výhradne pre registrované administrátorské Google účty majiteľky.
           </p>
-
-          {/* Emergency PIN Fallback (Discreet) */}
-          <div className="pt-4 border-t border-[#EAE5DC]/80">
-            {!showPinModal ? (
-              <button
-                type="button"
-                onClick={() => setShowPinModal(true)}
-                className="text-xs text-[#8C7A86] hover:text-[#261B24] transition-colors underline cursor-pointer"
-              >
-                Núdzový prístup bezpečnostným PIN kódom
-              </button>
-            ) : (
-              <form onSubmit={handleVerifyPin} className="space-y-2.5 text-left">
-                <label className="block text-xs font-medium text-[#261B24]">
-                  Bezpečnostný kód majiteľky
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="password"
-                    value={pinInput}
-                    onChange={(e) => setPinInput(e.target.value)}
-                    placeholder="Zadajte kód..."
-                    className="flex-1 px-3 py-2 text-xs bg-[#FAF8F5] border border-[#DFD8CD] rounded-lg text-[#261B24] focus:outline-none focus:border-[#a62891]"
-                  />
-                  <button
-                    type="submit"
-                    className="px-3.5 py-2 bg-[#261B24] hover:bg-[#3d2c3a] text-[#FAF8F5] text-xs font-medium rounded-lg transition-colors cursor-pointer shrink-0"
-                  >
-                    Vstúpiť
-                  </button>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowPinModal(false)}
-                  className="text-[11px] text-[#8C7A86] hover:text-[#261B24]"
-                >
-                  Zrušiť
-                </button>
-              </form>
-            )}
-          </div>
         </div>
 
         <p className="mt-8 text-[11px] text-[#9E8E98]">

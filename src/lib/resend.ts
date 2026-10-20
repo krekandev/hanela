@@ -44,10 +44,10 @@ export const RESEND_CONFIG = {
     return process.env.RESEND_FROM_EMAIL || "Cukráreň Hanela <onboarding@resend.dev>";
   },
   get ownerEmail(): string {
-    return process.env.RESEND_OWNER_EMAIL || "cukraren.hanela@gmail.com";
+    return process.env.RESEND_OWNER_EMAIL || "hanelacakes@gmail.com";
   },
   bakeryAddress: "Hlavná 102/179, 900 29 Viničné",
-  bakeryPhone: "+421 900 000 000",
+  bakeryPhone: "+421 910 960 913",
   bakeryName: "Cukráreň Hanela",
 };
 
@@ -239,9 +239,16 @@ export function generateCustomerOrderEmailHtml(order: Order): string {
           
           <!-- BRAND HEADER -->
           <tr>
-            <td style="background-color: #261B24; padding: 36px 32px; text-align: center; border-bottom: 3px solid #a62891;">
-              <h1 style="margin: 0; font-family: Georgia, serif; font-size: 28px; font-weight: 400; letter-spacing: 4px; color: #FAF8F5; text-transform: uppercase;">HANELA</h1>
-              <p style="margin: 8px 0 0 0; font-size: 11px; letter-spacing: 2.5px; color: #DFD8CD; text-transform: uppercase; font-weight: 500;">Remeselná cukrárska výrobňa &bull; Viničné</p>
+            <td style="background-color: #261B24; padding: 32px 32px 28px 32px; text-align: center; border-bottom: 3px solid #a62891;">
+              <table role="presentation" cellpadding="0" cellspacing="0" style="margin: 0 auto;">
+                <tr>
+                  <td align="center">
+                    <img src="https://hanela.sk/images/logo.png" alt="Hanela" width="60" height="60" style="display: block; width: 60px; height: 60px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.25); margin: 0 auto 12px auto; object-fit: cover;" />
+                    <h1 style="margin: 0; font-family: Georgia, serif; font-size: 26px; font-weight: 400; letter-spacing: 4px; color: #FAF8F5; text-transform: uppercase;">HANELA</h1>
+                    <p style="margin: 6px 0 0 0; font-size: 11px; letter-spacing: 2.5px; color: #DFD8CD; text-transform: uppercase; font-weight: 500;">Remeselná cukrárska výrobňa &bull; Viničné</p>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
 
@@ -450,14 +457,17 @@ export function generateOwnerAlertEmailHtml(order: Order): string {
           
           <!-- TOP ALERT BAR -->
           <tr>
-            <td style="background-color: #261B24; padding: 24px 28px; border-bottom: 3px solid #a62891;">
+            <td style="background-color: #261B24; padding: 20px 24px; border-bottom: 3px solid #a62891;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                 <tr>
-                  <td>
+                  <td width="52" style="vertical-align: middle; padding-right: 14px;">
+                    <img src="https://hanela.sk/images/logo.png" alt="Hanela" width="46" height="46" style="display: block; width: 46px; height: 46px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.25); object-fit: cover;" />
+                  </td>
+                  <td style="vertical-align: middle;">
                     <div style="color: #FAF1F8; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px;">
                       NOVÁ REZERVÁCIA DO VÝROBY
                     </div>
-                    <div style="font-family: Georgia, serif; font-size: 24px; color: #FAF8F5; margin-top: 4px;">
+                    <div style="font-family: Georgia, serif; font-size: 22px; color: #FAF8F5; margin-top: 2px;">
                       Objednávka #${safeOrderNumber}
                     </div>
                   </td>

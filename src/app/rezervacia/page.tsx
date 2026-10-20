@@ -32,12 +32,14 @@ import {
 import { useCart, CartItem } from "@/context/CartContext";
 import {
   subscribeBlockedDates,
+  subscribePrices,
+  getProductOverrides,
   saveOrder,
   getCakeSizes,
   DEFAULT_CAKE_SIZES,
 } from "@/lib/orders-service";
 import { sendOrderNotification } from "@/lib/webhook";
-import { CakeSizeOverride } from "@/lib/types";
+import { CakeSizeOverride, ProductPriceDoc } from "@/lib/types";
 
 const KORPUS_OPTIONS = [
   "Piškótový",
@@ -89,8 +91,6 @@ const DIET_OPTIONS = [
 const ZDOBENIE_OPTIONS = [
   { id: "cislo", name: "Personalizovaný zápich s číslom", price: 6 },
   { id: "meno", name: "Personalizovaný zápich s menom", price: 12 },
-  { id: "postavicka", name: "Personalizovaná postavička", price: 15 },
-  { id: "coko", name: "Personalizovaný čoko zápich", price: 10 },
 ];
 
 function ReservationContent() {
