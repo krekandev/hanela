@@ -1,6 +1,7 @@
 import {
   collection,
   doc,
+  getDoc,
   getDocs,
   setDoc,
   updateDoc,
@@ -697,6 +698,56 @@ export async function deleteManualContact(contactId: string): Promise<void> {
   const updated = current.filter((c) => c.id !== contactId);
   saveToStorage(STORAGE_KEY_MANUAL_CONTACTS, updated);
 }
+
+/* -------------------------------------------------------------
+ * EMAIL DISPATCH VIA WEBHOOK & RESEND
+ * ----------------------------------------------------------- */
+export async function dispatchOrderNotification(order: Order): Promise<{ success: boolean; error?: string }> {
+  let webhookUrl = process.env.NEXT_PUBLIC_EMAIL_WEBHOOK_URL || "";
+
+  // If not in env, read live from Firestore settings/resend
+  if (!webhookUrl && isFirebaseConfigured && db) {
+    try {
+      const snap = await getDoc(doc(db, "settings", "resend"));
+      if (snap.exists()) {
+        const data = snap.data();
+        if (data.webhookUrl) webhookUrl = String(data.webhookUrl).trim();
+      }
+    } catch (err) {
+      console.warn("[Email Dispatch] Failed to read webhookUrl from Firestore:", err);
+    }
+  }
+
+  // Also check localStorage fallback
+  if (!webhookUrl && typeof window !== "undefined") {
+    try {
+      webhookUrl = localStorage.getItem("hanela_email_webhook_url") || "";
+    } catch {
+      // ignore
+    }
+  }
+
+  if (!webhookUrl) {
+    console.warn("[Email Dispatch] No email webhook URL configured yet. Order saved to Firestore.");
+    return { success: false, error: "No webhook URL configured" };
+  }
+
+  try {
+    // We send Content-Type text/plain with mode no-cors to prevent browser preflight blocks
+    await fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ order }),
+      mode: "no-cors",
+    });
+    console.log(`[Email Dispatch] Order #${order.orderNumber} successfully dispatched to webhook.`);
+    return { success: true };
+  } catch (err: unknown) {
+    console.error("[Email Dispatch] Webhook call failed:", err);
+    return { success: false, error: err instanceof Error ? err.message : "Chyba odoslania" };
+  }
+}
+
 
 
 /* -------------------------------------------------------------
