@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { X, Menu, ShoppingBag } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 
@@ -13,6 +14,11 @@ export default function Navbar({ onOpenBooking }: NavbarProps) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { totalQuantity, formattedTotalPrice } = useCart();
+  const pathname = usePathname();
+
+  // Docking effect is strictly enabled only on /ponuka (to prevent filter bar overlap)
+  const isPonuka = pathname === "/ponuka" || pathname?.startsWith("/ponuka");
+  const isDocked = isPonuka && scrolled;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -55,10 +61,10 @@ export default function Navbar({ onOpenBooking }: NavbarProps) {
 
   return (
     <>
-      {/* Floating Pill Nav Bar — docks cleanly to top-0 when scrolled */}
+      {/* Floating Pill Nav Bar — docks to top-0 strictly on /ponuka when scrolled */}
       <header
         className={`fixed left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled
+          isDocked
             ? "top-0 bg-[#261B24]/95 backdrop-blur-md border-b border-white/10 py-2 sm:py-2.5 px-3.5 sm:px-8 lg:px-12 shadow-md pointer-events-auto"
             : "top-3.5 sm:top-8 px-3.5 sm:px-10 lg:px-14 pointer-events-none"
         }`}
@@ -68,8 +74,10 @@ export default function Navbar({ onOpenBooking }: NavbarProps) {
           {/* Left Pill Capsule: Logo + Desktop Links */}
           <div
             className={`pointer-events-auto flex items-center gap-5 lg:gap-8 rounded-full transition-all duration-300 ${
-              scrolled
+              isDocked
                 ? "bg-transparent border-transparent text-white shadow-none px-0 py-0"
+                : scrolled
+                ? "bg-[#261B24]/90 backdrop-blur-md border border-white/20 text-white shadow-xl shadow-black/15 px-4 sm:px-7 py-2 sm:py-3"
                 : "bg-[#261B24]/80 backdrop-blur-md border border-white/25 text-white shadow-md shadow-black/10 px-4 sm:px-7 py-2 sm:py-3"
             }`}
           >
@@ -112,7 +120,7 @@ export default function Navbar({ onOpenBooking }: NavbarProps) {
               <a
                 href="/rezervacia"
                 className={`inline-flex items-center gap-2 rounded-full bg-[#a62891] hover:bg-[#8e207b] text-white text-xs font-semibold shadow-lg shadow-[#a62891]/30 transition-all active:scale-95 animate-fadeIn ${
-                  scrolled ? "px-3.5 py-1.5 sm:px-4 sm:py-2" : "px-4 sm:px-5 py-2 sm:py-2.5"
+                  isDocked ? "px-3.5 py-1.5 sm:px-4 sm:py-2" : "px-4 sm:px-5 py-2 sm:py-2.5"
                 }`}
               >
                 <ShoppingBag className="w-3.5 h-3.5" />
@@ -127,7 +135,7 @@ export default function Navbar({ onOpenBooking }: NavbarProps) {
             <a
               href="tel:+421910960913"
               className={`hidden sm:inline-flex items-center rounded-full text-xs sm:text-sm font-medium text-white transition-all font-mono ${
-                scrolled
+                isDocked
                   ? "bg-white/10 hover:bg-white/20 border border-white/15 px-4 py-2"
                   : "bg-[#261B24]/75 hover:bg-[#261B24]/95 backdrop-blur-md border border-white/25 px-5 sm:px-6 py-2.5 sm:py-3 shadow-md"
               }`}
@@ -139,7 +147,7 @@ export default function Navbar({ onOpenBooking }: NavbarProps) {
             <a
               href="/rezervacia"
               className={`hidden lg:inline-flex rounded-full bg-white text-[#261B24] font-semibold tracking-tight hover:bg-[#FAF8F5] active:scale-[0.98] transition-all shadow-md whitespace-nowrap ${
-                scrolled
+                isDocked
                   ? "px-5 py-2 text-xs"
                   : "px-6 sm:px-7 py-2.5 sm:py-3 text-xs sm:text-sm shadow-black/15"
               }`}
@@ -152,7 +160,7 @@ export default function Navbar({ onOpenBooking }: NavbarProps) {
               <a
                 href="/rezervacia"
                 className={`lg:hidden inline-flex items-center justify-center rounded-full bg-[#a62891] hover:bg-[#8e207b] text-white font-semibold shadow-md active:scale-95 transition-all whitespace-nowrap ${
-                  scrolled ? "px-3.5 py-1.5 text-[11px]" : "px-4 py-2 text-xs"
+                  isDocked ? "px-3.5 py-1.5 text-[11px]" : "px-4 py-2 text-xs"
                 }`}
               >
                 Rezervácia
