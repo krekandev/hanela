@@ -84,18 +84,18 @@ export default function Navbar({ onOpenBooking }: NavbarProps) {
             {/* Logo: Brand Icon + Name */}
             <a
               href="/"
-              className="flex items-center gap-2.5 font-bold tracking-tight text-white uppercase text-sm sm:text-base lg:text-lg hover:opacity-95 transition-opacity"
+              className="flex items-center gap-3 font-bold tracking-tight text-white uppercase text-base sm:text-lg lg:text-xl hover:opacity-95 transition-opacity"
             >
-              <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-full overflow-hidden border border-white/30 shrink-0">
+              <div className="relative w-9 h-9 sm:w-11 sm:h-11 rounded-full overflow-hidden border border-white/35 shrink-0 shadow-sm">
                 <Image
                   src="/images/logo.png"
                   alt="Hanela - remeselná cukráreň"
                   fill
-                  sizes="32px"
+                  sizes="(max-width: 640px) 36px, 44px"
                   className="object-cover"
                 />
               </div>
-              <span>HANELA</span>
+              <span className="tracking-wide">HANELA</span>
             </a>
 
             {/* Desktop Navigation Links */}
