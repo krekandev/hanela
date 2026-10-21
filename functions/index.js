@@ -142,6 +142,7 @@ exports.onOrderCreated = onDocumentCreated("orders/{orderId}", async (event) => 
         resend.emails.send({
           from: FROM_EMAIL,
           to: [customerEmail],
+          replyTo: OWNER_EMAIL,
           reply_to: OWNER_EMAIL,
           subject: `Potvrdenie objednávky č. ${orderNumber} | Cukráreň Hanela`,
           html: customerHtml,
@@ -160,6 +161,7 @@ exports.onOrderCreated = onDocumentCreated("orders/{orderId}", async (event) => 
       resend.emails.send({
         from: FROM_EMAIL,
         to: [OWNER_EMAIL],
+        replyTo: customerEmail || OWNER_EMAIL,
         reply_to: customerEmail || OWNER_EMAIL,
         subject: `🔔 Nová objednávka #${orderNumber} – ${customerName} (${pickupDate} o ${pickupTime})`,
         html: ownerHtml,
@@ -209,6 +211,7 @@ exports.sendOrderEmail = onRequest({ cors: true }, async (req, res) => {
         resend.emails.send({
           from: FROM_EMAIL,
           to: [customerEmail],
+          replyTo: OWNER_EMAIL,
           reply_to: OWNER_EMAIL,
           subject: `Potvrdenie objednávky č. ${orderNumber} | Cukráreň Hanela`,
           html: customerHtml,
@@ -221,6 +224,7 @@ exports.sendOrderEmail = onRequest({ cors: true }, async (req, res) => {
       resend.emails.send({
         from: FROM_EMAIL,
         to: [OWNER_EMAIL],
+        replyTo: customerEmail || OWNER_EMAIL,
         reply_to: customerEmail || OWNER_EMAIL,
         subject: `🔔 Nová objednávka #${orderNumber} – ${customerName} (${pickupDate} o ${pickupTime})`,
         html: ownerHtml,
