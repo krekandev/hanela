@@ -1576,10 +1576,9 @@ export const PRODUCTS: Product[] = [
     "description": "Nadýchaný dezert s jemným vanilkovým pudingom, šľahačkou a ľahkou medovou chuťou.\n\nAby Vám chutilo a koláčiky boli vždy čerstvé, minimálne množstvo na objednávku je 5 kusov z jedného druhu.",
     "category": "zakusky",
     "subcategory": "Tradičné rezy & Klasika",
-    "image": "/images/products/medovy-kremes.webp",
+    "image": "/images/products/medovy-kremes-rezy.webp",
     "images": [
-      "/images/products/medovy-kremes.webp",
-      "/images/products/medovy-kremes-2.webp"
+      "/images/products/medovy-kremes-rezy.webp"
     ],
     "minQuantity": 5,
     "servings": "min. 5 ks z druhu"
