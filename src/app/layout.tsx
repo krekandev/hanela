@@ -48,6 +48,7 @@ export const viewport: Viewport = {
 };
 
 import { CartProvider } from "@/context/CartContext";
+import ChristmasPopup from "@/components/ChristmasPopup";
 
 export default function RootLayout({
   children,
@@ -57,7 +58,10 @@ export default function RootLayout({
   return (
     <html lang="sk" className={`${inter.variable} ${lora.variable} h-full scroll-smooth`}>
       <body className="min-h-full flex flex-col font-sans antialiased bg-[#FAF8F5] text-[#261B24] selection:bg-[#a62891]/25 selection:text-[#261B24]">
-        <CartProvider>{children}</CartProvider>
+        <CartProvider>
+          {children}
+          <ChristmasPopup />
+        </CartProvider>
       </body>
     </html>
   );
