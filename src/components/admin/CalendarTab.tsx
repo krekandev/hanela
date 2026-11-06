@@ -15,8 +15,15 @@ import {
   Calendar as CalendarIcon,
   Ban,
   User,
+  Camera,
+  ExternalLink,
+  Trash2,
+  Maximize2,
+  Download,
+  X,
 } from "lucide-react";
 import { Order, OrderStatus, BlockedDate, ORDER_STATUS_TOKENS } from "@/lib/types";
+import { deleteOrder } from "@/lib/orders-service";
 
 interface CalendarTabProps {
   orders: Order[];
@@ -26,6 +33,7 @@ interface CalendarTabProps {
   onUpdateStatus: (orderId: string, status: OrderStatus) => Promise<void>;
   onUpdateInternalNote: (orderId: string, note: string) => Promise<void>;
   onPrintReceipt: (order: Order) => void;
+  onDeleteOrder?: (orderId: string) => Promise<void>;
 }
 
 const MONTH_NAMES = [
@@ -56,6 +64,7 @@ export function CalendarTab({
   onUpdateStatus,
   onUpdateInternalNote,
   onPrintReceipt,
+  onDeleteOrder,
 }: CalendarTabProps) {
   // Calendar View month/year state
   const [currentYear, setCurrentYear] = useState<number>(() => {
@@ -75,6 +84,11 @@ export function CalendarTab({
   // Internal note editing local states: orderId -> draft text
   const [editingNotes, setEditingNotes] = useState<Record<string, string>>({});
   const [savingNoteId, setSavingNoteId] = useState<string | null>(null);
+  const [lightboxPhoto, setLightboxPhoto] = useState<{
+    url: string;
+    orderId?: string;
+    orderNumber?: string;
+  } | null>(null);
 
   // Month navigation
   const handlePrevMonth = () => {
@@ -444,6 +458,24 @@ export function CalendarTab({
                                 />
                                 <span>{statusToken.label}</span>
                               </span>
+
+                              {order.inspirationPhoto?.url && (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setLightboxPhoto({
+                                      url: order.inspirationPhoto!.url,
+                                      orderId: order.id,
+                                      orderNumber: order.orderNumber,
+                                    })
+                                  }
+                                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#FAF1F8] text-[#a62891] border border-[#ECD9E8] hover:bg-[#ECD9E8] transition-colors cursor-pointer"
+                                  title="Kliknite pre zobrazenie predlohy"
+                                >
+                                  <Camera className="w-3.5 h-3.5" />
+                                  <span>Predloha</span>
+                                </button>
+                              )}
                             </div>
 
                             {/* Customer Contact */}
@@ -479,6 +511,28 @@ export function CalendarTab({
                               title="Tlačiť bon do pekárne"
                             >
                               <Printer className="w-4 h-4" />
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                if (
+                                  !window.confirm(
+                                    `Naozaj chcete natrvalo vymazať zákazku č. ${order.orderNumber} (${order.customer.name})?\n\nTáto akcia je nevratná.`
+                                  )
+                                ) {
+                                  return;
+                                }
+                                if (onDeleteOrder) {
+                                  await onDeleteOrder(order.id);
+                                } else {
+                                  await deleteOrder(order.id);
+                                }
+                              }}
+                              className="p-2 text-[#7A2E2E]/60 hover:text-[#7A2E2E] hover:bg-[#FBF2F2] rounded-lg border border-transparent hover:border-[#EDD5D5] transition-colors cursor-pointer"
+                              title="Úplne vymazať zákazku"
+                            >
+                              <Trash2 className="w-4 h-4" />
                             </button>
 
                             {nextStatus && (
@@ -580,6 +634,62 @@ export function CalendarTab({
                           </div>
                         )}
 
+                        {/* Inspiration Photo Thumbnail */}
+                        {order.inspirationPhoto?.url && (
+                          <div className="bg-[#FAF8F5] border border-[#ECD9E8] rounded-xl p-3 flex items-center justify-between gap-3 text-xs shadow-2xs">
+                            <div
+                              onClick={() =>
+                                setLightboxPhoto({
+                                  url: order.inspirationPhoto!.url,
+                                  orderId: order.id,
+                                  orderNumber: order.orderNumber,
+                                })
+                              }
+                              className="flex items-center gap-3 min-w-0 cursor-pointer group"
+                              title="Kliknite pre zväčšenie"
+                            >
+                              <div className="relative w-14 h-14 rounded-lg overflow-hidden border border-[#DFD8CD] bg-white shrink-0 group-hover:border-[#a62891] transition-colors shadow-2xs">
+                                <img
+                                  src={order.inspirationPhoto.url}
+                                  alt="Predloha"
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                                />
+                                <div className="absolute inset-0 bg-black/15 group-hover:bg-black/30 flex items-center justify-center transition-colors">
+                                  <Maximize2 className="w-4 h-4 text-white drop-shadow" />
+                                </div>
+                              </div>
+                              <div className="min-w-0">
+                                <div className="font-semibold text-[#261B24] group-hover:text-[#a62891] transition-colors flex items-center gap-1">
+                                  <span>Predloha od zákazníka</span>
+                                  {order.inspirationPhoto.sizeBytes && (
+                                    <span className="text-[10px] text-[#6B5B65] font-normal font-mono">
+                                      ({Math.round(order.inspirationPhoto.sizeBytes / 1024)} KB)
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="text-[11px] text-[#a62891] block mt-0.5 underline font-medium">
+                                  Kliknite pre zväčšenie
+                                </span>
+                              </div>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setLightboxPhoto({
+                                  url: order.inspirationPhoto!.url,
+                                  orderId: order.id,
+                                  orderNumber: order.orderNumber,
+                                })
+                              }
+                              className="inline-flex items-center gap-1 px-3 py-1.5 bg-white hover:bg-[#FAF1F8] border border-[#ECD9E8] text-[#a62891] text-xs font-medium rounded-lg transition-colors shrink-0 cursor-pointer"
+                            >
+                              <Maximize2 className="w-3.5 h-3.5" />
+                              <span>Zväčšiť</span>
+                            </button>
+                          </div>
+                        )}
+
                         {/* Internal Bakery Note Editor */}
                         <div className="pt-2 border-t border-[#EAE5DC]/60 space-y-1.5">
                           <label className="text-[11px] font-semibold uppercase tracking-wider text-[#6B5B65] flex items-center justify-between">
@@ -620,6 +730,59 @@ export function CalendarTab({
           </div>
         )}
       </div>
+
+      {/* Lightbox / Fullscreen Image Preview */}
+      {lightboxPhoto && (
+        <div
+          className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn"
+          onClick={() => setLightboxPhoto(null)}
+        >
+          <div
+            className="relative max-w-5xl max-h-[95vh] w-full flex flex-col items-center justify-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Top Bar with Actions */}
+            <div className="w-full flex items-center justify-between pb-3 text-white">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-white/90">
+                  Predloha torty od zákazníka
+                </span>
+                {lightboxPhoto.orderNumber && (
+                  <span className="font-mono text-[11px] px-2 py-0.5 rounded bg-white/10 text-white/80">
+                    #{lightboxPhoto.orderNumber}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <a
+                  href={lightboxPhoto.url}
+                  download={`predloha-${lightboxPhoto.orderNumber || "torta"}.jpg`}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#a62891] hover:bg-[#8F237D] text-xs font-bold text-white transition-colors shadow-sm"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Stiahnuť</span>
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setLightboxPhoto(null)}
+                  className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors cursor-pointer text-white flex items-center gap-1 text-xs font-semibold ml-1"
+                >
+                  <X className="w-4 h-4" />
+                  <span>Zavrieť</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="relative max-w-full max-h-[82vh] overflow-hidden rounded-xl border border-white/15 bg-black/60 flex items-center justify-center shadow-2xl">
+              <img
+                src={lightboxPhoto.url}
+                alt="Predloha v plnom rozlíšení"
+                className="max-w-full max-h-[82vh] object-contain rounded-xl select-none"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

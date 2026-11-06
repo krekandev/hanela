@@ -1,0 +1,10 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /cake-inspirations/{allPaths=**} {
+      // Allow customers to upload compressed inspiration photos, and anyone to view them
+      allow read, write: if true;
+    }
+  }
+}

@@ -13,6 +13,7 @@
  * Bakery catalog categories matching ORIGINAL_REQUEST and products.ts
  */
 export type ProductCategory =
+  | "vianoce"
   | "mix"
   | "torty-mieru"
   | "torty-cheesecakes"
@@ -138,6 +139,13 @@ export const PICKUP_TIME_SLOTS = [
 
 export type PickupTimeSlot = typeof PICKUP_TIME_SLOTS[number] | string;
 
+export interface OrderInspirationPhoto {
+  url: string;
+  storagePath?: string;
+  fileName?: string;
+  sizeBytes?: number;
+}
+
 /**
  * Canonical Order document schema (Firestore: orders/{orderId})
  */
@@ -152,6 +160,9 @@ export interface Order {
   totalPrice: number;
   status: OrderStatus;
   internalNote?: string;
+  inspirationPhoto?: OrderInspirationPhoto;
+  emailSent?: boolean;
+  emailSentAt?: string;
   updatedAt?: string;
 }
 

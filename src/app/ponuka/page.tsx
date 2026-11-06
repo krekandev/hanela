@@ -30,6 +30,7 @@ export default function PonukaPage() {
   const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
   const [modalQuantity, setModalQuantity] = useState<number>(1);
   const [addedSuccess, setAddedSuccess] = useState<boolean>(false);
+  const [selectedDoughVariant, setSelectedDoughVariant] = useState<string>("Cesto na medovníky");
 
   const { addItem, totalQuantity } = useCart();
 
@@ -37,14 +38,18 @@ export default function PonukaPage() {
     setSelectedProduct(prod);
     setActiveImageIndex(0);
     setModalQuantity(prod.minQuantity || 1);
+    setSelectedDoughVariant("Cesto na medovníky");
     setAddedSuccess(false);
   };
 
   const handleAddToCart = () => {
     if (!selectedProduct) return;
+    const isDough = selectedProduct.slug === "cesto-na-vianocne-pecenie";
     addItem({
-      productId: selectedProduct.id,
-      name: selectedProduct.name,
+      productId: isDough
+        ? `${selectedProduct.id}-${selectedDoughVariant.toLowerCase().replace(/[^a-z0-9]/g, "-")}`
+        : selectedProduct.id,
+      name: isDough ? `${selectedProduct.name} – ${selectedDoughVariant}` : selectedProduct.name,
       slug: selectedProduct.slug,
       category: selectedProduct.category,
       image: selectedProduct.image,
@@ -52,6 +57,7 @@ export default function PonukaPage() {
       quantity: modalQuantity,
       totalPrice: selectedProduct.price * modalQuantity,
       servings: selectedProduct.servings,
+      doplnky: isDough ? [`Druh: ${selectedDoughVariant}`] : undefined,
     });
     setAddedSuccess(true);
     setTimeout(() => setAddedSuccess(false), 3000);
@@ -221,7 +227,7 @@ export default function PonukaPage() {
                   : "bg-white text-[#261B24]/80 border border-[#DFD8CD] hover:bg-[#F4EFE7]"
               }`}
             >
-              Všetky (41)
+              Všetky ({PRODUCTS.length})
             </button>
 
             {CATEGORIES.map((cat) => {
@@ -337,10 +343,7 @@ export default function PonukaPage() {
                     {/* Section Header */}
                     <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 pb-3 border-b-2 border-[#261B24]/10">
                       <div>
-                        <div className="flex items-center gap-2.5 mb-1">
-                          <span className="text-[11px] font-bold uppercase tracking-wider text-[#a62891] bg-[#FAF1F8] border border-[#ECD9E8] px-2.5 py-0.5 rounded-full">
-                            {cat.badge}
-                          </span>
+                        <div className="flex items-center gap-2 mb-1">
                           <span className="text-xs text-[#261B24]/50 font-mono">
                             {sectionProducts.length} {sectionProducts.length === 1 ? "položka" : "položiek"}
                           </span>
@@ -374,7 +377,10 @@ export default function PonukaPage() {
                         >
                           <div>
                             {/* Product Photo */}
-                            <div className="relative w-full aspect-square rounded-xl sm:rounded-2xl overflow-hidden bg-[#FAF8F5] mb-3 sm:mb-4 border border-[#EAE5DC]">
+                            <div
+                              onClick={() => openProductModal(product)}
+                              className="relative w-full aspect-square rounded-xl sm:rounded-2xl overflow-hidden bg-[#FAF8F5] mb-3 sm:mb-4 border border-[#EAE5DC] cursor-pointer"
+                            >
                               <Image
                                 src={product.image}
                                 alt={product.name}
@@ -382,45 +388,22 @@ export default function PonukaPage() {
                                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                                 className="object-cover group-hover:scale-105 transition-transform duration-500"
                               />
-
-                              {/* Tag badge */}
-                              {product.tag && (
-                                <div className="absolute top-2 left-2 sm:top-3 sm:left-3 z-10">
-                                  <span className="inline-block px-2 py-0.5 text-[8px] sm:text-[10px] font-semibold uppercase tracking-wider rounded-full bg-[#a62891] text-white shadow-xs">
-                                    {product.tag}
-                                  </span>
-                                </div>
-                              )}
-
-                              {/* Subcategory badge */}
-                              <div className="hidden sm:block absolute bottom-3 left-3 z-10">
-                                <span className="inline-block px-2 py-0.5 text-[9px] font-medium tracking-wide rounded-full bg-white/90 backdrop-blur-xs text-[#261B24] border border-[#DFD8CD] shadow-xs">
-                                  {product.subcategory}
-                                </span>
-                              </div>
                             </div>
 
-                            {/* Subcategory mobile badge */}
-                            <span className="sm:hidden text-[9px] font-semibold uppercase tracking-wider text-[#a62891] block mb-0.5 truncate">
-                              {product.subcategory}
-                            </span>
-
                             {/* Title */}
-                            <h3 className="text-xs sm:text-base font-semibold text-[#261B24] group-hover:text-[#a62891] transition-colors leading-tight sm:leading-snug line-clamp-2 min-h-[32px] sm:min-h-[44px]">
+                            <h3
+                              onClick={() => openProductModal(product)}
+                              className="text-xs sm:text-base font-semibold text-[#261B24] group-hover:text-[#a62891] transition-colors leading-tight sm:leading-snug line-clamp-2 min-h-[32px] sm:min-h-[44px] cursor-pointer"
+                            >
                               {product.name}
                             </h3>
 
-                            {/* Servings */}
+                            {/* Gramáž / Servings */}
                             {product.servings && (
-                              <p className="text-[10px] sm:text-[11px] text-[#a62891] font-medium mt-0.5 sm:mt-1 truncate">
+                              <p className="text-[11px] sm:text-xs text-[#a62891] font-medium mt-1 truncate">
                                 {product.servings}
                               </p>
                             )}
-
-                            {/* Description (desktop/tablet only to keep mobile cards compact) */}
-                            <p className="hidden sm:block mt-2 text-xs text-[#261B24]/70 leading-relaxed line-clamp-2">
-                              {product.description || "Čerstvo pečené z poctivých surovín podľa vlastnej receptúry Hanela."}
-                            </p>
                           </div>
 
                           {/* Bottom: Price & CTA */}
@@ -601,8 +584,55 @@ export default function PonukaPage() {
                 </div>
               )}
 
+              {/* Dough Variant Selection */}
+              {selectedProduct.slug === "cesto-na-vianocne-pecenie" && (
+                <div className="space-y-3 pt-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] uppercase tracking-wider text-[#a62891] font-bold">
+                      Druh cesta (750g / 10 €)
+                    </span>
+                    <span className="text-[10px] text-[#261B24]/50">
+                      Vyberte si požadovaný variant
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-2 text-xs">
+                    {[
+                      { name: "Cesto na medovníky", desc: "Tradičné s pravým včelím medom a voňavým korením" },
+                      { name: "Cesto na linecké pečivo", desc: "Jemné a krehké z poctivého 82% masla a vanilky" },
+                      { name: "Cesto na vanilkové rožteky", desc: "Poctivé orechové z mletých vlašských orechov" },
+                    ].map((variant) => {
+                      const isActive = selectedDoughVariant === variant.name;
+                      return (
+                        <div
+                          key={variant.name}
+                          onClick={() => setSelectedDoughVariant(variant.name)}
+                          className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
+                            isActive
+                              ? "border-[#a62891] bg-[#fcf4fb] ring-2 ring-[#a62891]/20 font-semibold"
+                              : "border-[#DFD8CD] bg-white hover:bg-[#FAF8F5]"
+                          }`}
+                        >
+                          <div>
+                            <p className="text-xs sm:text-sm text-[#261B24]">{variant.name}</p>
+                            <p className="text-[11px] text-[#261B24]/60">{variant.desc}</p>
+                          </div>
+                          <span
+                            className={`text-[10px] px-2.5 py-1 rounded-full font-medium shrink-0 ml-2 ${
+                              isActive ? "bg-[#a62891] text-white" : "bg-[#F4EFE7] text-[#261B24]/60"
+                            }`}
+                          >
+                            {isActive ? "Vybrané" : "Vybrať"}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* Custom Cake Options Preview (if cake has options) */}
-              {selectedProduct.options && selectedProduct.options.length > 0 && (
+              {selectedProduct.category === "torty-mieru" && selectedProduct.options && selectedProduct.options.length > 0 && (
                 <div className="space-y-3 pt-1">
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] uppercase tracking-wider text-[#a62891] font-bold">

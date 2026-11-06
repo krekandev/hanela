@@ -12,6 +12,11 @@ import {
   Clock,
   ChevronRight,
   Filter,
+  Camera,
+  ExternalLink,
+  Trash2,
+  Maximize2,
+  Download,
 } from "lucide-react";
 import {
   Order,
@@ -19,12 +24,14 @@ import {
   ORDER_STATUS_TOKENS,
   ORDER_STATUS_LABELS,
 } from "@/lib/types";
+import { removeOrderInspirationPhoto, deleteOrder } from "@/lib/orders-service";
 
 interface OrdersTabProps {
   orders: Order[];
   onUpdateStatus: (orderId: string, status: OrderStatus) => Promise<void>;
   onUpdateInternalNote: (orderId: string, note: string) => Promise<void>;
   onPrintReceipt: (order: Order) => void;
+  onDeleteOrder?: (orderId: string) => Promise<void>;
 }
 
 const STATUS_PROGRESSION: Record<OrderStatus, OrderStatus | null> = {
@@ -46,6 +53,7 @@ export function OrdersTab({
   onUpdateStatus,
   onUpdateInternalNote,
   onPrintReceipt,
+  onDeleteOrder,
 }: OrdersTabProps) {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -54,6 +62,53 @@ export function OrdersTab({
   // Note editor inside detail drawer
   const [drawerNote, setDrawerNote] = useState<string>("");
   const [isSavingDrawerNote, setIsSavingDrawerNote] = useState<boolean>(false);
+  const [isDeletingPhoto, setIsDeletingPhoto] = useState<boolean>(false);
+  const [isDeletingOrder, setIsDeletingOrder] = useState<boolean>(false);
+  const [lightboxPhotoUrl, setLightboxPhotoUrl] = useState<string | null>(null);
+
+  const handleDeleteOrder = async (order: Order) => {
+    if (
+      !window.confirm(
+        `Naozaj chcete natrvalo vymazať zákazku č. ${order.orderNumber} (${order.customer.name})?\n\nTáto akcia je nevratná a kompletne ju odstráni zo systému aj z databázy.`
+      )
+    ) {
+      return;
+    }
+
+    setIsDeletingOrder(true);
+    try {
+      if (onDeleteOrder) {
+        await onDeleteOrder(order.id);
+      } else {
+        await deleteOrder(order.id);
+      }
+      if (selectedOrder?.id === order.id) {
+        setSelectedOrder(null);
+      }
+    } catch (err) {
+      console.error("Chyba pri mazaní objednávky:", err);
+      alert("Nepodarilo sa vymazať objednávku.");
+    } finally {
+      setIsDeletingOrder(false);
+    }
+  };
+
+  const handleDeletePhoto = async () => {
+    if (!selectedOrder) return;
+    if (!window.confirm("Naozaj chcete vymazať túto fotografiu z úložiska a uvoľniť miesto?")) return;
+    setIsDeletingPhoto(true);
+    try {
+      await removeOrderInspirationPhoto(selectedOrder.id);
+      const updated = { ...selectedOrder };
+      delete updated.inspirationPhoto;
+      setSelectedOrder(updated);
+    } catch (err) {
+      console.error("Chyba pri mazaní fotky:", err);
+      alert("Nepodarilo sa zmazať fotografiu.");
+    } finally {
+      setIsDeletingPhoto(false);
+    }
+  };
 
   // Diacritic-insensitive filtering helper
   const filteredOrders = useMemo(() => {
@@ -214,6 +269,16 @@ export function OrdersTab({
                       />
                       <span>{token.label}</span>
                     </span>
+
+                    {order.inspirationPhoto?.url && (
+                      <span
+                        className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#FAF1F8] text-[#a62891] border border-[#ECD9E8]"
+                        title="Objednávka obsahuje predlohu od zákazníka"
+                      >
+                        <Camera className="w-3.5 h-3.5" />
+                        <span>Predloha</span>
+                      </span>
+                    )}
                   </div>
 
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
@@ -273,6 +338,16 @@ export function OrdersTab({
                     className="px-3 py-1.5 bg-[#FAF8F5] hover:bg-[#F4EFE7] text-[#261B24] text-xs font-medium rounded-lg border border-[#EAE5DC] transition-colors"
                   >
                     Detail
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={isDeletingOrder}
+                    onClick={() => handleDeleteOrder(order)}
+                    className="p-2 text-[#7A2E2E]/60 hover:text-[#7A2E2E] hover:bg-[#FBF2F2] rounded-lg border border-transparent hover:border-[#EDD5D5] transition-colors cursor-pointer"
+                    title="Úplne vymazať zákazku"
+                  >
+                    <Trash2 className="w-4 h-4" />
                   </button>
 
                   {/* 1-Click Status Progression */}
@@ -366,9 +441,21 @@ export function OrdersTab({
 
               {/* Status Selector */}
               <div className="space-y-2">
-                <label className="text-xs font-semibold uppercase tracking-wider text-[#6B5B65] block">
-                  Zmeniť stav zákazky
-                </label>
+                <div className="flex items-center justify-between gap-2">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-[#6B5B65] block">
+                    Zmeniť stav zákazky
+                  </label>
+                  <button
+                    type="button"
+                    disabled={isDeletingOrder}
+                    onClick={() => handleDeleteOrder(selectedOrder)}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-[#7A2E2E] bg-[#FBF2F2] border border-[#EDD5D5] hover:bg-[#7A2E2E] hover:text-[#FAF8F5] rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+                    title="Natrvalo vymazať zákazku"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>{isDeletingOrder ? "Mažem..." : "Úplne vymazať zákazku"}</span>
+                  </button>
+                </div>
                 <div className="flex flex-wrap gap-2">
                   {(["nova", "vyroba", "pripravena", "odovzdana", "zrusena"] as OrderStatus[]).map(
                     (st) => {
@@ -399,6 +486,53 @@ export function OrdersTab({
                   )}
                 </div>
               </div>
+
+              {/* Inspiration Photo from Customer (if attached) */}
+              {selectedOrder.inspirationPhoto?.url && (
+                <div className="bg-[#FAF8F5] border border-[#ECD9E8] rounded-xl p-3 flex items-center justify-between gap-3 shadow-2xs">
+                  <div
+                    onClick={() => setLightboxPhotoUrl(selectedOrder.inspirationPhoto!.url)}
+                    className="flex items-center gap-3 cursor-pointer group min-w-0"
+                    title="Kliknite pre zväčšenie"
+                  >
+                    <div className="relative w-14 h-14 rounded-lg overflow-hidden border border-[#DFD8CD] bg-white shrink-0 group-hover:border-[#a62891] transition-colors shadow-2xs">
+                      <img
+                        src={selectedOrder.inspirationPhoto.url}
+                        alt="Predloha"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                      />
+                      <div className="absolute inset-0 bg-black/15 group-hover:bg-black/30 flex items-center justify-center transition-colors">
+                        <Maximize2 className="w-4 h-4 text-white drop-shadow" />
+                      </div>
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-xs font-bold text-[#261B24] group-hover:text-[#a62891] transition-colors flex items-center gap-1.5 flex-wrap">
+                        <Camera className="w-3.5 h-3.5 text-[#a62891]" />
+                        <span>Predloha od zákazníka</span>
+                        {selectedOrder.inspirationPhoto.sizeBytes && (
+                          <span className="text-[10px] text-[#6B5B65] font-normal font-mono">
+                            ({Math.round(selectedOrder.inspirationPhoto.sizeBytes / 1024)} KB)
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[11px] text-[#a62891] block mt-0.5 font-medium underline">
+                        Kliknite pre zväčšenie na celú obrazovku
+                      </span>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled={isDeletingPhoto}
+                    onClick={handleDeletePhoto}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 text-xs text-[#7A2E2E] hover:bg-[#FBF2F2] rounded-lg transition-colors cursor-pointer shrink-0 border border-transparent hover:border-[#EDD5D5]"
+                    title="Zmazať fotku"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>{isDeletingPhoto ? "Mažem..." : "Zmazať"}</span>
+                  </button>
+                </div>
+              )}
 
               {/* Items Breakdown */}
               <div className="space-y-3">
@@ -500,6 +634,59 @@ export function OrdersTab({
                   {selectedOrder.totalPrice.toFixed(2)} €
                 </span>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Lightbox / Fullscreen Image Preview */}
+      {lightboxPhotoUrl && (
+        <div
+          className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn"
+          onClick={() => setLightboxPhotoUrl(null)}
+        >
+          <div
+            className="relative max-w-5xl max-h-[95vh] w-full flex flex-col items-center justify-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Top Bar with Actions */}
+            <div className="w-full flex items-center justify-between pb-3 text-white">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-white/90">
+                  Predloha torty od zákazníka
+                </span>
+                {selectedOrder && (
+                  <span className="font-mono text-[11px] px-2 py-0.5 rounded bg-white/10 text-white/80">
+                    #{selectedOrder.orderNumber}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <a
+                  href={lightboxPhotoUrl}
+                  download={`predloha-${selectedOrder?.orderNumber || "torta"}.jpg`}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#a62891] hover:bg-[#8F237D] text-xs font-bold text-white transition-colors shadow-sm"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Stiahnuť</span>
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setLightboxPhotoUrl(null)}
+                  className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors cursor-pointer text-white flex items-center gap-1 text-xs font-semibold ml-1"
+                >
+                  <X className="w-4 h-4" />
+                  <span>Zavrieť</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="relative max-w-full max-h-[82vh] overflow-hidden rounded-xl border border-white/15 bg-black/60 flex items-center justify-center shadow-2xl">
+              <img
+                src={lightboxPhotoUrl}
+                alt="Predloha v plnom rozlíšení"
+                className="max-w-full max-h-[82vh] object-contain rounded-xl select-none"
+              />
             </div>
           </div>
         </div>

@@ -21,7 +21,7 @@ export interface Product {
   price: number;
   priceFormatted: string;
   description: string;
-  category: "mix" | "torty-mieru" | "torty-cheesecakes" | "zakusky";
+  category: "vianoce" | "mix" | "torty-mieru" | "torty-cheesecakes" | "zakusky";
   subcategory: string;
   image: string;
   images: string[];
@@ -33,7 +33,7 @@ export interface Product {
 }
 
 export interface CategoryDefinition {
-  id: "mix" | "torty-mieru" | "torty-cheesecakes" | "zakusky";
+  id: "vianoce" | "mix" | "torty-mieru" | "torty-cheesecakes" | "zakusky";
   title: string;
   shortTitle: string;
   badge: string;
@@ -42,6 +42,14 @@ export interface CategoryDefinition {
 }
 
 export const CATEGORIES: CategoryDefinition[] = [
+  {
+    id: "vianoce",
+    title: "Vianočná limitovaná ponuka 2026",
+    shortTitle: "Vianočná ponuka",
+    badge: "Vianočná limitka",
+    description: "Slávnostná vianočná ponuka zákuskov, čajového pečiva a poctivých ciest na domáce vianočné pečenie.",
+    subcategories: ["Všetky"],
+  },
   {
     id: "mix",
     title: "Víkendové degustačné mixy",
@@ -77,6 +85,75 @@ export const CATEGORIES: CategoryDefinition[] = [
 ];
 
 export const PRODUCTS: Product[] = [
+  {
+    id: "vianocna-krabicka-kremovych-zakuskov",
+    name: "Veľká vianočná krabička krémových zákuskov (27 ks)",
+    slug: "vianocna-krabicka-kremovych-zakuskov",
+    price: 70.0,
+    priceFormatted: "70 €",
+    description: "Slávnostný vianočný výber prémiových krémových zákuskov pečených z pravého masla a belgickej čokolády. Krabička obsahuje 27 ks:\n• 4× Karamelové veterníčky\n• 5× Doboška\n• 4× Punčový rez\n• 5× Grilážka pistáciovo-orechová\n• 4× Čokoládové tartaletky s ovocím\n• 5× Medovo-orechové rezy",
+    category: "vianoce",
+    subcategory: "Vianočné boxy",
+    image: "/images/products/vianocna-krabicka-kremovych-zakuskov.webp",
+    images: [
+      "/images/products/vianocna-krabicka-kremovych-zakuskov.webp",
+      "/images/products/vianocna-krabicka-kremovych-zakuskov-2.webp"
+    ],
+    minQuantity: 1,
+    tag: "Vianočná limitka",
+    isPopular: true,
+    servings: "27 ks"
+  },
+  {
+    id: "krabicka-cajoveho-peciva",
+    name: "Krabička čajového pečiva (750g)",
+    slug: "krabicka-cajoveho-peciva",
+    price: 37.0,
+    priceFormatted: "37 €",
+    description: "Tradičné vianočné čajové pečivo pečené s láskou z pravého 82% masla. Krabička (750g, cca 55 ks) obsahuje:\n• Linecké koláčiky s malinovým džemom\n• Krehké vanilkové rožteky\n• Plnené oriešky\n• Kakaové linecké s marhuľovým džemom\n• Kávové kolieska",
+    category: "vianoce",
+    subcategory: "Vianočné pečivo",
+    image: "/images/products/krabicka-cajoveho-peciva.webp",
+    images: [
+      "/images/products/krabicka-cajoveho-peciva.webp",
+      "/images/products/krabicka-cajoveho-peciva-2.webp"
+    ],
+    minQuantity: 1,
+    tag: "Vianočná limitka",
+    isPopular: true,
+    servings: "750g (cca 55 ks)"
+  },
+  {
+    id: "cesto-na-vianocne-pecenie",
+    name: "Cesto na vianočné pečenie (750g)",
+    slug: "cesto-na-vianocne-pecenie",
+    price: 10.0,
+    priceFormatted: "10 €",
+    description: "Poctivo pripravené a odležané maslové cesto na vianočné pečenie z 82% masla a kvalitných surovín. Hmotnosť balenia 750g. Vyberte si požadovaný druh cesta: Cesto na medovníky, Cesto na linecké alebo Cesto na vanilkové rožteky.",
+    category: "vianoce",
+    subcategory: "Cestá",
+    image: "/images/products/cesto-na-vianocne-pecenie.webp",
+    images: [
+      "/images/products/cesto-na-vianocne-pecenie.webp"
+    ],
+    minQuantity: 1,
+    tag: "Domáce pečenie",
+    isPopular: false,
+    servings: "750g",
+    options: [
+      {
+        id: "druh-cesta",
+        title: "Druh cesta",
+        type: "select",
+        required: true,
+        options: [
+          { id: "cesto-medovniky", name: "Cesto na medovníky", price: 0 },
+          { id: "cesto-linecke", name: "Cesto na linecké pečivo", price: 0 },
+          { id: "cesto-vanilkove-rozteky", name: "Cesto na vanilkové / orechové rožteky", price: 0 }
+        ]
+      }
+    ]
+  },
   {
     "id": "cmezzaxhc000rl504oxsqf02f",
     "name": "Mix zákuskov 9ks",

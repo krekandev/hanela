@@ -340,6 +340,18 @@ export function generateCustomerOrderEmailHtml(order: Order): string {
           </tr>
           ` : ""}
 
+          <!-- CUSTOMER INSPIRATION PHOTO CONFIRMATION -->
+          ${order.inspirationPhoto?.url ? `
+          <tr>
+            <td style="padding: 0 32px 24px 32px;">
+              <div style="background-color: #FAF8F5; border: 1px solid #EAE5DC; border-radius: 12px; padding: 14px 18px; font-size: 12px; color: #261B24;">
+                <strong style="color: #a62891;">📷 Predloha / Inšpirácia torty prijatá:</strong>
+                <span style="color: #6B5B65;"> K objednávke ste priložili inšpiračnú fotografiu, podľa ktorej bude naša cukrárka postupovať.</span>
+              </div>
+            </td>
+          </tr>
+          ` : ""}
+
           <!-- CARE & TRANSPORT INSTRUCTIONS -->
           <tr>
             <td style="padding: 0 32px 32px 32px;">
@@ -396,6 +408,9 @@ export function generateOwnerAlertEmailHtml(order: Order): string {
   const safeEmail = escapeHtml(order.customer.email);
   const safeNotes = escapeHtml(order.customer.notes);
   const safeAllergies = escapeHtml(order.customer.allergies);
+  const siteBaseUrl =
+    process.env.NEXT_PUBLIC_BASE_URL ||
+    (process.env.NODE_ENV === "development" ? "http://localhost:3030" : "https://hanela.sk");
 
   const itemsList = order.items
     .map((item, idx) => {
@@ -552,6 +567,30 @@ export function generateOwnerAlertEmailHtml(order: Order): string {
           </tr>
           ` : ""}
 
+          <!-- INSPIRATION PHOTO (IF ATTACHED) -->
+          ${order.inspirationPhoto?.url ? `
+          <tr>
+            <td style="padding: 0 28px 20px 28px;">
+              <div style="background-color: #FAF1F8; border: 1px solid #ECD9E8; border-radius: 12px; padding: 16px;">
+                <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #a62891; letter-spacing: 1px; margin-bottom: 10px;">
+                  📷 Predloha / Inšpirácia od zákazníka
+                </div>
+                <div style="text-align: center; margin-bottom: 12px;">
+                  <a href="${siteBaseUrl}/admin" target="_blank" rel="noopener noreferrer">
+                    <img src="${escapeHtml(order.inspirationPhoto.url)}" alt="Predloha torty" style="max-width: 100%; max-height: 340px; object-fit: contain; border-radius: 8px; border: 1px solid #DFD8CD;" />
+                  </a>
+                </div>
+                <div style="font-size: 12px; text-align: center; color: #6B5B65;">
+                  <a href="${siteBaseUrl}/admin" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: #a62891; color: #ffffff; text-decoration: none; padding: 8px 18px; border-radius: 8px; font-weight: 600; font-size: 12px; box-shadow: 0 2px 4px rgba(166,40,145,0.2);">
+                    Otvoriť v administrácii Hanela &rarr;
+                  </a>
+                  ${order.inspirationPhoto.sizeBytes ? `<div style="margin-top: 6px; font-size: 11px; color: #8C7B85;">Veľkosť: ${Math.round(order.inspirationPhoto.sizeBytes / 1024)} KB</div>` : ""}
+                </div>
+              </div>
+            </td>
+          </tr>
+          ` : ""}
+
           <!-- KITCHEN ITEMS PRODUCTION TABLE -->
           <tr>
             <td style="padding: 0 28px 24px 28px;">
@@ -576,7 +615,7 @@ export function generateOwnerAlertEmailHtml(order: Order): string {
           <!-- ADMIN LINK BUTTON -->
           <tr>
             <td style="padding: 0 28px 28px 28px; text-align: center;">
-              <a href="/admin" style="display: inline-block; background-color: #261B24; color: #FAF8F5; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-size: 13px; font-weight: 600; letter-spacing: 0.5px;">
+              <a href="${siteBaseUrl}/admin" style="display: inline-block; background-color: #261B24; color: #FAF8F5; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-size: 13px; font-weight: 600; letter-spacing: 0.5px;">
                 Otvoriť v administrácii Hanela &rarr;
               </a>
             </td>

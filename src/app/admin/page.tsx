@@ -24,6 +24,7 @@ import {
   blockDate,
   unblockDate,
   saveProductPrice,
+  deleteOrder,
 } from "@/lib/orders-service";
 import { AdminHeader, AdminTab } from "@/components/admin/AdminHeader";
 import { AdminStats } from "@/components/admin/AdminStats";
@@ -183,6 +184,11 @@ export default function AdminPage() {
     await updateOrderInternalNote(orderId, note);
   };
 
+  // Delete order permanently
+  const handleDeleteOrder = async (orderId: string) => {
+    await deleteOrder(orderId);
+  };
+
   // Capacity actions
   const handleBlockDate = async (date: string, reason: string) => {
     await blockDate(date, reason);
@@ -294,6 +300,7 @@ export default function AdminPage() {
               onUpdateStatus={handleUpdateStatus}
               onUpdateInternalNote={handleUpdateInternalNote}
               onPrintReceipt={setReceiptOrder}
+              onDeleteOrder={handleDeleteOrder}
             />
           )}
 
@@ -303,6 +310,7 @@ export default function AdminPage() {
               onUpdateStatus={handleUpdateStatus}
               onUpdateInternalNote={handleUpdateInternalNote}
               onPrintReceipt={setReceiptOrder}
+              onDeleteOrder={handleDeleteOrder}
             />
           )}
 

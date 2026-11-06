@@ -1,12 +1,13 @@
 import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
 import { getFirestore, Firestore } from "firebase/firestore";
 import { getAuth, Auth, GoogleAuthProvider } from "firebase/auth";
+import { getStorage, FirebaseStorage } from "firebase/storage";
 
 export const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "",
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "hanela-cukraren.firebaseapp.com",
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "hanela-cukraren",
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "hanela-cukraren.appspot.com",
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "hanela-cukraren.firebasestorage.app",
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "",
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "",
 };
@@ -41,6 +42,7 @@ export function getFirebaseConfigStatus(): FirebaseConfigStatus {
 let app: FirebaseApp | null = null;
 let db: Firestore | null = null;
 let auth: Auth | null = null;
+let storage: FirebaseStorage | null = null;
 let googleProvider: GoogleAuthProvider | null = null;
 
 if (typeof window !== "undefined") {
@@ -49,6 +51,7 @@ if (typeof window !== "undefined") {
       app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
       db = getFirestore(app);
       auth = getAuth(app);
+      storage = getStorage(app);
       googleProvider = new GoogleAuthProvider();
       googleProvider.setCustomParameters({ prompt: "select_account" });
     } catch (error) {
@@ -56,6 +59,7 @@ if (typeof window !== "undefined") {
       app = null;
       db = null;
       auth = null;
+      storage = null;
       googleProvider = null;
     }
   } else if (process.env.NODE_ENV === "development") {
@@ -63,4 +67,4 @@ if (typeof window !== "undefined") {
   }
 }
 
-export { app, db, auth, googleProvider };
+export { app, db, auth, storage, googleProvider };

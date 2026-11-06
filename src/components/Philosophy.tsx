@@ -12,7 +12,7 @@ export default function Philosophy() {
       {/* Background Soft Botanical/Ingredients Photography with Warm Tone */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         <Image
-          src="/images/pure_ingredients.jpg"
+          src="/images/pure_ingredients.webp"
           alt="Poctivé ingrediencie v pozadí"
           fill
           sizes="100vw"
@@ -73,7 +73,7 @@ export default function Philosophy() {
               {/* Product Visual */}
               <div className="relative w-48 sm:w-64 aspect-square flex items-center justify-center my-2">
                 <Image
-                  src="/images/trans_tartlets.png"
+                  src="/images/trans_tartlets.webp"
                   alt="Remeselná tartaletka a éclair z čistých surovín"
                   fill
                   sizes="(max-width: 640px) 192px, 256px"

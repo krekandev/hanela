@@ -77,7 +77,7 @@ export default function Footer() {
         {/* Background Image with Organic Atmosphere */}
         <div className="absolute inset-0 z-0">
           <Image
-            src="/images/pure_ingredients.jpg"
+            src="/images/pure_ingredients.webp"
             alt="Hanela prírodné suroviny a remeslo"
             fill
             sizes="100vw"

@@ -7,7 +7,7 @@ export interface CartItem {
   productId: string;
   name: string;
   slug: string;
-  category: "mix" | "torty-mieru" | "torty-cheesecakes" | "zakusky";
+  category: "vianoce" | "mix" | "torty-mieru" | "torty-cheesecakes" | "zakusky";
   image: string;
   unitPrice: number;
   quantity: number;

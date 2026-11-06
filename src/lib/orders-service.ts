@@ -6,6 +6,7 @@ import {
   setDoc,
   updateDoc,
   deleteDoc,
+  deleteField,
   onSnapshot,
   query,
   orderBy,
@@ -14,6 +15,7 @@ import { db, isFirebaseConfigured } from "./firebase";
 import {
   Order,
   OrderStatus,
+  OrderInspirationPhoto,
   BlockedDate,
   ProductPriceDoc,
   ProductPriceOverride,
@@ -207,6 +209,7 @@ export async function saveOrder(orderData: {
   status?: OrderStatus;
   createdAt?: string;
   internalNote?: string;
+  inspirationPhoto?: OrderInspirationPhoto;
 } | Order): Promise<Order> {
   const currentOrders = loadFromStorage<Order[]>(STORAGE_KEY_ORDERS, INITIAL_DEMO_ORDERS);
   const nextSeq = currentOrders.length + 1;
@@ -226,6 +229,9 @@ export async function saveOrder(orderData: {
     items: orderData.items,
     totalPrice: orderData.totalPrice,
     internalNote: orderData.internalNote || "",
+    inspirationPhoto: orderData.inspirationPhoto,
+    emailSent: true,
+    emailSentAt: new Date().toISOString(),
   };
 
   if (isFirebaseConfigured && db) {
@@ -240,6 +246,39 @@ export async function saveOrder(orderData: {
 
   saveToStorage(STORAGE_KEY_ORDERS, [newOrder, ...currentOrders.filter((o) => o.id !== id)]);
   return newOrder;
+}
+
+export async function removeOrderInspirationPhoto(orderId: string): Promise<void> {
+  const current = loadFromStorage<Order[]>(STORAGE_KEY_ORDERS, INITIAL_DEMO_ORDERS);
+  const target = current.find((ord) => ord.id === orderId);
+  if (!target) return;
+
+  if (target.inspirationPhoto?.storagePath) {
+    try {
+      const { deleteCakeInspirationPhoto } = await import("./image-upload");
+      await deleteCakeInspirationPhoto(target.inspirationPhoto.storagePath);
+    } catch (e) {
+      console.warn("Failed to delete from storage:", e);
+    }
+  }
+
+  if (isFirebaseConfigured && db) {
+    try {
+      await updateDoc(doc(db, "orders", orderId), { inspirationPhoto: deleteField() });
+    } catch (err) {
+      console.warn("[Firestore] removeOrderInspirationPhoto failed:", err);
+    }
+  }
+
+  const updated = current.map((ord) => {
+    if (ord.id === orderId) {
+      const copy = { ...ord };
+      delete copy.inspirationPhoto;
+      return copy;
+    }
+    return ord;
+  });
+  saveToStorage(STORAGE_KEY_ORDERS, updated);
 }
 
 export async function updateOrderStatus(orderId: string, status: OrderStatus): Promise<void> {
@@ -278,6 +317,51 @@ export async function updateOrderInternalNote(orderId: string, note: string): Pr
 
   const updated = current.map((ord) => (ord.id === orderId ? { ...ord, internalNote: note } : ord));
   saveToStorage(STORAGE_KEY_ORDERS, updated);
+}
+
+export async function deleteOrder(orderId: string): Promise<void> {
+  const current = loadFromStorage<Order[]>(STORAGE_KEY_ORDERS, INITIAL_DEMO_ORDERS);
+  const target = current.find((ord) => ord.id === orderId);
+
+  // 1. Delete inspiration photo from Firebase Storage if present
+  if (target?.inspirationPhoto?.storagePath) {
+    try {
+      const { deleteCakeInspirationPhoto } = await import("./image-upload");
+      await deleteCakeInspirationPhoto(target.inspirationPhoto.storagePath);
+    } catch (e) {
+      console.warn("Failed to delete photo from storage during order deletion:", e);
+    }
+  }
+
+  // 2. Delete document from Firestore
+  if (isFirebaseConfigured && db) {
+    try {
+      await deleteDoc(doc(db, "orders", orderId));
+      console.log(`[Firestore] Order ${orderId} successfully deleted from Firestore.`);
+    } catch (err) {
+      console.error("[Firestore] deleteOrder failed:", err);
+    }
+  }
+
+  // 3. Delete from local storage
+  const updated = current.filter((ord) => ord.id !== orderId);
+  saveToStorage(STORAGE_KEY_ORDERS, updated);
+}
+
+export async function getOrder(orderId: string): Promise<Order | null> {
+  if (isFirebaseConfigured && db) {
+    try {
+      const snap = await getDoc(doc(db, "orders", orderId));
+      if (snap.exists()) {
+        return { id: snap.id, ...snap.data() } as Order;
+      }
+    } catch (e) {
+      console.warn("[Firestore] getOrder failed:", e);
+    }
+  }
+
+  const current = loadFromStorage<Order[]>(STORAGE_KEY_ORDERS, INITIAL_DEMO_ORDERS);
+  return current.find((o) => o.id === orderId || o.orderNumber === orderId) || null;
 }
 
 /* -------------------------------------------------------------

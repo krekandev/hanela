@@ -39,7 +39,8 @@ import {
   DEFAULT_CAKE_SIZES,
 } from "@/lib/orders-service";
 import { sendOrderNotification } from "@/lib/webhook";
-import { CakeSizeOverride, ProductPriceDoc } from "@/lib/types";
+import { CakeSizeOverride, ProductPriceDoc, OrderInspirationPhoto } from "@/lib/types";
+import InspirationPhotoUpload from "@/components/InspirationPhotoUpload";
 
 const KORPUS_OPTIONS = [
   "Piškótový",
@@ -95,7 +96,7 @@ const ZDOBENIE_OPTIONS = [
 
 function ReservationContent() {
   const searchParams = useSearchParams();
-  const initialCategoryParam = searchParams.get("category") || "mix";
+  const initialCategoryParam = searchParams.get("category") || "vianoce";
   const initialProductParam = searchParams.get("product");
   const initialQtyParam = searchParams.get("qty");
 
@@ -115,7 +116,7 @@ function ReservationContent() {
   const [step, setStep] = useState<number>(1);
 
   // Active Category & Subcategory in product picker
-  const [selectedCategory, setSelectedCategory] = useState<string>("mix");
+  const [selectedCategory, setSelectedCategory] = useState<string>("vianoce");
   const [activeSubcategory, setActiveSubcategory] = useState<string>("Všetky");
 
   // Currently configuring product (null if only browsing cart)
@@ -123,6 +124,7 @@ function ReservationContent() {
   const [activeGalleryIndex, setActiveGalleryIndex] = useState<number>(0);
 
   // Active configuration inputs
+  const [selectedDoughVariant, setSelectedDoughVariant] = useState<string>("Cesto na medovníky");
   const [pieceCount, setPieceCount] = useState<number>(5);
   const [selectedSize, setSelectedSize] = useState<string>("10–15 porcií (Ø 21 cm)");
   const [selectedSizeExtra, setSelectedSizeExtra] = useState<number>(55);
@@ -132,6 +134,7 @@ function ReservationContent() {
   const [selectedDiets, setSelectedDiets] = useState<string[]>([]);
   const [selectedZdobenie, setSelectedZdobenie] = useState<string[]>([]);
   const [cakeNote, setCakeNote] = useState<string>("");
+  const [inspirationPhoto, setInspirationPhoto] = useState<OrderInspirationPhoto | null>(null);
 
   // Dynamic cake sizes from admin
   const [cakeSizes, setCakeSizes] = useState<CakeSizeOverride[]>(DEFAULT_CAKE_SIZES);
@@ -346,15 +349,21 @@ function ReservationContent() {
   const handleAddCurrentToCart = () => {
     if (!selectedProduct) return;
 
+    const isDough = selectedProduct.slug === "cesto-na-vianocne-pecenie";
     const itemQuantity = selectedProduct.category === "zakusky" ? pieceCount : 1;
     const unitPrice =
       selectedProduct.category === "zakusky"
         ? selectedProduct.price
         : currentItemPrice;
 
+    const itemName = isDough ? `${selectedProduct.name} – ${selectedDoughVariant}` : selectedProduct.name;
+    const itemId = isDough
+      ? `${selectedProduct.id}-${selectedDoughVariant.toLowerCase().replace(/[^a-z0-9]/g, "-")}`
+      : selectedProduct.id;
+
     addItem({
-      productId: selectedProduct.id,
-      name: selectedProduct.name,
+      productId: itemId,
+      name: itemName,
       slug: selectedProduct.slug,
       category: selectedProduct.category,
       image: selectedProduct.image,
@@ -364,7 +373,11 @@ function ReservationContent() {
       size: selectedProduct.name === "TORTA podľa vlastného výberu" ? selectedSize : undefined,
       korpus: selectedProduct.category === "torty-mieru" ? selectedKorpus : undefined,
       krem: selectedProduct.category === "torty-mieru" ? selectedKrem : undefined,
-      doplnky: selectedDoplnky.length > 0 ? selectedDoplnky : undefined,
+      doplnky: isDough
+        ? [`Druh: ${selectedDoughVariant}`]
+        : selectedDoplnky.length > 0
+        ? selectedDoplnky
+        : undefined,
       diets: selectedDiets.length > 0 ? selectedDiets : undefined,
       zdobenie: selectedZdobenie.length > 0 ? selectedZdobenie : undefined,
       cakeNote: cakeNote.trim() || undefined,
@@ -374,7 +387,8 @@ function ReservationContent() {
           : selectedProduct.servings,
     });
 
-    setJustAddedNotification(`Položka "${selectedProduct.name}" bola úspešne pridaná do košíka!`);
+    const notificationName = isDough ? `${selectedProduct.name} (${selectedDoughVariant})` : selectedProduct.name;
+    setJustAddedNotification(`Položka "${notificationName}" bola úspešne pridaná do košíka!`);
     setTimeout(() => setJustAddedNotification(null), 3500);
 
     // Smooth scroll to cart summary
@@ -418,6 +432,7 @@ function ReservationContent() {
         },
         items: cartItems,
         totalPrice: cartTotalPrice,
+        inspirationPhoto: inspirationPhoto || undefined,
       });
 
       // Odoslanie e-mailov zákazníkovi a majiteľke cez Resend API route
@@ -847,7 +862,7 @@ function ReservationContent() {
                       </div>
 
                       {/* Category Tab Switcher */}
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 p-1.5 rounded-2xl bg-[#F4EFE7] border border-[#DFD8CD]">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 p-1.5 rounded-2xl bg-[#F4EFE7] border border-[#DFD8CD]">
                         {CATEGORIES.map((cat) => {
                           const isCatSelected = selectedCategory === cat.id;
                           return (
@@ -934,21 +949,17 @@ function ReservationContent() {
 
                               {/* Product Info */}
                               <div className="flex-1 min-w-0">
-                                <div className="flex items-center justify-between gap-2 mb-1">
-                                  <span className="text-[10px] font-semibold uppercase tracking-wider text-[#a62891] truncate">
-                                    {prod.subcategory}
-                                  </span>
+                                <div className="flex items-start justify-between gap-2 mb-1">
+                                  <h3 className="text-sm sm:text-base font-semibold text-[#261B24] leading-tight line-clamp-2">
+                                    {prod.name}
+                                  </h3>
                                   <span className="text-xs sm:text-sm font-bold text-[#261B24] font-mono shrink-0">
                                     {prod.priceFormatted}
                                   </span>
                                 </div>
 
-                                <h3 className="text-sm sm:text-base font-semibold text-[#261B24] leading-tight line-clamp-2">
-                                  {prod.name}
-                                </h3>
-
                                 {prod.servings && (
-                                  <p className="text-[11px] text-[#261B24]/60 mt-0.5">
+                                  <p className="text-[11px] text-[#a62891] font-medium mt-0.5">
                                     {prod.servings}
                                   </p>
                                 )}
@@ -1060,6 +1071,63 @@ function ReservationContent() {
                                     {currentItemFormattedPrice}
                                   </span>
                                 </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* DOUGH VARIANT SELECTION */}
+                        {selectedProduct.slug === "cesto-na-vianocne-pecenie" && (
+                          <div className="space-y-4">
+                            <div className="p-4 rounded-2xl bg-[#FCF8F5] border border-[#ECD9E8] flex items-start gap-3 text-xs sm:text-sm text-[#261B24]/85 leading-relaxed">
+                              <Info className="w-5 h-5 text-[#a62891] shrink-0 mt-0.5" />
+                              <p>
+                                Vyberte si požadovaný druh poctivého maslového cesta (750g balenie). Ak si želáte viacero druhov, môžete ich postupne pridať do košíka.
+                              </p>
+                            </div>
+
+                            <div>
+                              <label className="block text-xs font-bold uppercase tracking-wider text-[#261B24] mb-3">
+                                Zvoľte druh cesta (750g / 10 €) *
+                              </label>
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                {[
+                                  { name: "Cesto na medovníky", desc: "S pravým včelím medom a voňavým perníkovým korením" },
+                                  { name: "Cesto na linecké pečivo", desc: "Krehké a jemné z poctivého 82% masla a vanilky" },
+                                  { name: "Cesto na vanilkové rožteky", desc: "Tradičné orechové z mletých vlašských orechov" },
+                                ].map((variant) => {
+                                  const isDoughActive = selectedDoughVariant === variant.name;
+                                  return (
+                                    <div
+                                      key={variant.name}
+                                      onClick={() => setSelectedDoughVariant(variant.name)}
+                                      className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
+                                        isDoughActive
+                                          ? "border-[#a62891] bg-[#fcf4fb] ring-2 ring-[#a62891]/20 font-semibold"
+                                          : "border-[#DFD8CD] bg-white hover:bg-[#FAF8F5]"
+                                      }`}
+                                    >
+                                      <div>
+                                        <p className="text-xs sm:text-sm text-[#261B24] font-medium leading-tight">
+                                          {variant.name}
+                                        </p>
+                                        <p className="text-[11px] text-[#261B24]/60 mt-1 leading-snug">
+                                          {variant.desc}
+                                        </p>
+                                      </div>
+                                      <div className="mt-4 pt-2.5 border-t border-[#DFD8CD]/50 flex items-center justify-between">
+                                        <span className="text-xs font-mono font-bold text-[#a62891]">10 €</span>
+                                        <span
+                                          className={`text-[10px] px-2.5 py-0.5 rounded-full font-medium ${
+                                            isDoughActive ? "bg-[#a62891] text-white" : "bg-[#F4EFE7] text-[#261B24]/60"
+                                          }`}
+                                        >
+                                          {isDoughActive ? "Vybrané" : "Vybrať"}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
                               </div>
                             </div>
                           </div>
@@ -1316,6 +1384,15 @@ function ReservationContent() {
                                 className="w-full bg-white rounded-xl border border-[#DFD8CD] px-4 py-3 text-xs sm:text-sm text-[#261B24] focus:border-[#a62891] focus:outline-none focus:ring-1 focus:ring-[#a62891] shadow-2xs"
                               />
                             </div>
+
+                            {/* Inšpiračná fotografia torty */}
+                            <div className="pt-2">
+                              <InspirationPhotoUpload
+                                value={inspirationPhoto}
+                                onChange={setInspirationPhoto}
+                                title="Predloha / inšpirácia (voliteľné)"
+                              />
+                            </div>
                           </div>
                         )}
 
@@ -1542,6 +1619,15 @@ function ReservationContent() {
                           value={notes}
                           onChange={(e) => setNotes(e.target.value)}
                           className="w-full bg-white rounded-xl border border-[#DFD8CD] px-4 py-3 text-sm text-[#261B24] focus:border-[#a62891] focus:outline-none focus:ring-1 focus:ring-[#a62891] shadow-xs"
+                        />
+                      </div>
+
+                      {/* Predloha / Inšpirácia torty */}
+                      <div className="pt-2">
+                        <InspirationPhotoUpload
+                          value={inspirationPhoto}
+                          onChange={setInspirationPhoto}
+                          title="Predloha / inšpirácia (voliteľné)"
                         />
                       </div>
                     </div>
