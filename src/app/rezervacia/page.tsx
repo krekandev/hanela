@@ -1623,7 +1623,7 @@ function ReservationContent() {
                       </div>
 
                       {/* Predloha / Inšpirácia torty */}
-                      <div className="pt-2">
+                      <div className="sm:col-span-2 pt-2">
                         <InspirationPhotoUpload
                           value={inspirationPhoto}
                           onChange={setInspirationPhoto}
