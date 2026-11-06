@@ -94,6 +94,19 @@ const ZDOBENIE_OPTIONS = [
   { id: "meno", name: "Personalizovaný zápich s menom", price: 12 },
 ];
 
+const CHRISTMAS_PICKUP_DATE = "2026-12-22";
+const CHRISTMAS_BOX_SLUGS = [
+  "vianocna-krabicka-kremovych-zakuskov",
+  "krabicka-cajoveho-peciva",
+];
+const CHRISTMAS_DOUGH_SLUG = "cesto-na-vianocne-pecenie";
+
+const isChristmasBoxSlug = (slugOrId?: string) =>
+  Boolean(slugOrId && CHRISTMAS_BOX_SLUGS.some((s) => slugOrId === s || slugOrId.startsWith(s)));
+
+const isDoughSlug = (slugOrId?: string) =>
+  Boolean(slugOrId && (slugOrId === CHRISTMAS_DOUGH_SLUG || slugOrId.startsWith(CHRISTMAS_DOUGH_SLUG)));
+
 function ReservationContent() {
   const searchParams = useSearchParams();
   const initialCategoryParam = searchParams.get("category") || "vianoce";
@@ -174,6 +187,80 @@ function ReservationContent() {
   const [email, setEmail] = useState<string>("");
   const [allergies, setAllergies] = useState<string>("");
   const [notes, setNotes] = useState<string>("");
+
+  // Determine what types of products are in the active order (cart or currently selected)
+  const orderHasChristmasBox = useMemo(() => {
+    if (cartItems.length > 0) {
+      return cartItems.some((item) => isChristmasBoxSlug(item.slug || item.productId));
+    }
+    return Boolean(selectedProduct && isChristmasBoxSlug(selectedProduct.slug));
+  }, [cartItems, selectedProduct]);
+
+  const orderHasRegularItem = useMemo(() => {
+    if (cartItems.length > 0) {
+      return cartItems.some(
+        (item) =>
+          !isChristmasBoxSlug(item.slug || item.productId) &&
+          !isDoughSlug(item.slug || item.productId)
+      );
+    }
+    return Boolean(
+      selectedProduct &&
+        !isChristmasBoxSlug(selectedProduct.slug) &&
+        !isDoughSlug(selectedProduct.slug)
+    );
+  }, [cartItems, selectedProduct]);
+
+  const hasDateConflictInCart = useMemo(() => {
+    return (
+      cartItems.some((item) => isChristmasBoxSlug(item.slug || item.productId)) &&
+      cartItems.some(
+        (item) =>
+          !isChristmasBoxSlug(item.slug || item.productId) &&
+          !isDoughSlug(item.slug || item.productId)
+      )
+    );
+  }, [cartItems]);
+
+  // Effective calendar restrictions:
+  // - If ordering Christmas boxes: ONLY 2026-12-22 is allowed
+  // - If ordering Regular items: 2026-12-22 is blocked
+  // - If ordering ONLY dough: any unblocked day (including 2026-12-22) is allowed
+  const effectiveAllowedDates = useMemo(() => {
+    if (orderHasChristmasBox) {
+      return [CHRISTMAS_PICKUP_DATE];
+    }
+    return undefined;
+  }, [orderHasChristmasBox]);
+
+  const effectiveBlockedDates = useMemo(() => {
+    if (orderHasRegularItem && !blockedDates.includes(CHRISTMAS_PICKUP_DATE)) {
+      return [...blockedDates, CHRISTMAS_PICKUP_DATE];
+    }
+    return blockedDates;
+  }, [blockedDates, orderHasRegularItem]);
+
+  const effectiveBlockedReasonMap = useMemo(() => {
+    if (orderHasRegularItem) {
+      return {
+        ...blockedReasonMap,
+        [CHRISTMAS_PICKUP_DATE]:
+          blockedReasonMap[CHRISTMAS_PICKUP_DATE] ||
+          "22. 12. vydávame výhradne vianočné krabičky a čajové pečivo",
+      };
+    }
+    return blockedReasonMap;
+  }, [blockedReasonMap, orderHasRegularItem]);
+
+  // Auto-select 2026-12-22 when ordering Christmas boxes, or clear 2026-12-22 if regular item is present
+  useEffect(() => {
+    if (orderHasChristmasBox && date !== CHRISTMAS_PICKUP_DATE) {
+      setDate(CHRISTMAS_PICKUP_DATE);
+      setPickupTime("15:00");
+    } else if (orderHasRegularItem && !orderHasChristmasBox && date === CHRISTMAS_PICKUP_DATE) {
+      setDate("");
+    }
+  }, [orderHasChristmasBox, orderHasRegularItem, date]);
 
   // Helper to parse "YYYY-MM-DD" reliably in local timezone
   const parseLocalDate = (dateStr: string): Date | null => {
@@ -346,8 +433,35 @@ function ReservationContent() {
   }, [currentItemPrice]);
 
   // Add the currently configured item into the Cart
-  const handleAddCurrentToCart = () => {
-    if (!selectedProduct) return;
+  const handleAddCurrentToCart = (): boolean => {
+    if (!selectedProduct) return false;
+
+    const addingChristmasBox = isChristmasBoxSlug(selectedProduct.slug);
+    const addingDough = isDoughSlug(selectedProduct.slug);
+    const addingRegular = !addingChristmasBox && !addingDough;
+
+    const cartHasChristmasBox = cartItems.some((item) =>
+      isChristmasBoxSlug(item.slug || item.productId)
+    );
+    const cartHasRegular = cartItems.some(
+      (item) =>
+        !isChristmasBoxSlug(item.slug || item.productId) &&
+        !isDoughSlug(item.slug || item.productId)
+    );
+
+    if (addingChristmasBox && cartHasRegular) {
+      alert(
+        "Vianočné krabičky a čajové pečivo sa vydávajú výhradne 22. 12. 2026, kedy nie je možné objednať bežné torty a zákusky. Objednajte ich prosím samostatne (cesto na pečenie môžete kombinovať s oboma)."
+      );
+      return false;
+    }
+
+    if (addingRegular && cartHasChristmasBox) {
+      alert(
+        "V košíku máte vianočné pečivo s výhradným odberom 22. 12. 2026. Na 22. 12. sa bežné torty a zákusky neobjednávajú – vytvorte prosím pre bežné výrobky samostatnú objednávku na iný deň."
+      );
+      return false;
+    }
 
     const isDough = selectedProduct.slug === "cesto-na-vianocne-pecenie";
     const itemQuantity = selectedProduct.category === "zakusky" ? pieceCount : 1;
@@ -396,13 +510,21 @@ function ReservationContent() {
     if (cartEl) {
       cartEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
+    return true;
   };
 
   // Handle proceed to Step 2
   const handleProceedToDate = () => {
+    if (hasDateConflictInCart) {
+      alert(
+        "V košíku máte zároveň vianočné krabičky (odber iba 22. 12.) aj bežné výrobky (ktoré sa na 22. 12. nevydávajú). Odstráňte prosím jeden typ položiek pred výberom termínu."
+      );
+      return;
+    }
     // If cart is empty but user has a product selected, add it automatically
     if (cartItems.length === 0 && selectedProduct) {
-      handleAddCurrentToCart();
+      const added = handleAddCurrentToCart();
+      if (!added) return;
     }
     if (cartItems.length === 0 && !selectedProduct) {
       alert("Najprv, prosím, pridajte do košíka aspoň jeden výrobok.");
@@ -1467,13 +1589,24 @@ function ReservationContent() {
                     )}
 
                     {/* Fulfillment Guidelines */}
-                    <div className="p-4 rounded-2xl bg-[#F4EFE7] text-xs text-[#261B24]/80 leading-relaxed border border-[#DFD8CD]">
-                      <strong className="font-semibold text-[#261B24]">
-                        Otváracie hodiny výdajne Viničné:
-                      </strong>
-                      <p className="mt-1">
-                        Pondelok – Štvrtok: 15:00 a 15:30 | Piatok: 16:00 a 16:30 | Sobota: 11:00 a 11:30 | Nedeľa: Zatvorené
-                      </p>
+                    <div className="p-4 rounded-2xl bg-[#F4EFE7] text-xs text-[#261B24]/80 leading-relaxed border border-[#DFD8CD] space-y-1.5">
+                      <div>
+                        <strong className="font-semibold text-[#261B24]">
+                          Otváracie hodiny výdajne Viničné:
+                        </strong>
+                        <p className="mt-0.5">
+                          Pondelok – Štvrtok: 15:00 a 15:30 | Piatok: 16:00 a 16:30 | Sobota: 11:00 a 11:30 | Nedeľa: Zatvorené
+                        </p>
+                      </div>
+                      {orderHasChristmasBox ? (
+                        <p className="text-[#a62891] font-semibold pt-1 border-t border-[#DFD8CD]">
+                          Vianočné krabičky zákuskov a čajové pečivo vydávame výhradne 22. 12. 2026.
+                        </p>
+                      ) : orderHasRegularItem ? (
+                        <p className="text-[#261B24]/65 pt-1 border-t border-[#DFD8CD]">
+                          Poznámka: Dňa 22. 12. vydávame výhradne vianočné pečivo (bežné torty a zákusky sa na 22. 12. neobjednávajú).
+                        </p>
+                      ) : null}
                     </div>
 
                     {/* Interactive Calendar & Time Picker Row */}
@@ -1487,8 +1620,9 @@ function ReservationContent() {
                         <CustomCalendar
                           selectedDate={date}
                           onSelectDate={handleDateChange}
-                          blockedDates={blockedDates}
-                          blockedReasonMap={blockedReasonMap}
+                          blockedDates={effectiveBlockedDates}
+                          blockedReasonMap={effectiveBlockedReasonMap}
+                          allowedDates={effectiveAllowedDates}
                         />
                         <span className="text-[11px] text-[#261B24]/60 mt-1 block">
                           {date && parseLocalDate(date) ? (

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
 
 interface CustomCalendarProps {
@@ -8,6 +8,7 @@ interface CustomCalendarProps {
   onSelectDate: (date: string) => void;
   blockedDates?: string[]; // Array of YYYY-MM-DD dates blocked by admin
   blockedReasonMap?: Record<string, string>; // Optional reason map
+  allowedDates?: string[]; // Optional whitelist of YYYY-MM-DD dates (e.g. ["2026-12-22"] for Christmas boxes)
   className?: string;
 }
 
@@ -23,12 +24,36 @@ export function CustomCalendar({
   onSelectDate,
   blockedDates = [],
   blockedReasonMap = {},
+  allowedDates,
   className = "",
 }: CustomCalendarProps) {
   // Determine current viewing month/year from selectedDate or today
-  const initialDate = selectedDate ? new Date(selectedDate) : new Date();
-  const [currentYear, setCurrentYear] = useState<number>(initialDate.getFullYear());
-  const [currentMonth, setCurrentMonth] = useState<number>(initialDate.getMonth());
+  const parseYm = (dateStr?: string) => {
+    if (!dateStr) return null;
+    const parts = dateStr.split("-").map(Number);
+    if (parts.length !== 3) return null;
+    return { year: parts[0], month: parts[1] - 1 };
+  };
+
+  const initialYm =
+    parseYm(selectedDate) ||
+    (allowedDates && allowedDates.length > 0 ? parseYm(allowedDates[0]) : null) || {
+      year: new Date().getFullYear(),
+      month: new Date().getMonth(),
+    };
+
+  const [currentYear, setCurrentYear] = useState<number>(initialYm.year);
+  const [currentMonth, setCurrentMonth] = useState<number>(initialYm.month);
+
+  useEffect(() => {
+    const targetYm =
+      parseYm(selectedDate) ||
+      (allowedDates && allowedDates.length > 0 ? parseYm(allowedDates[0]) : null);
+    if (targetYm) {
+      setCurrentYear(targetYm.year);
+      setCurrentMonth(targetYm.month);
+    }
+  }, [selectedDate, allowedDates]);
 
   // Today reference (normalize to midnight)
   const today = new Date();
@@ -71,6 +96,7 @@ export function CustomCalendar({
     isSunday: boolean;
     isSaturday: boolean;
     isBlocked: boolean;
+    isNotAllowed: boolean;
     blockedReason?: string;
     isRecommended: boolean;
   }> = [];
@@ -84,6 +110,7 @@ export function CustomCalendar({
       isSunday: false,
       isSaturday: false,
       isBlocked: false,
+      isNotAllowed: false,
       isRecommended: false,
     });
   }
@@ -104,6 +131,7 @@ export function CustomCalendar({
     const isRecommended = dayOfWeek === 4 || dayOfWeek === 5 || dayOfWeek === 6; // Thu, Fri, Sat
     const isPast = cellDate < minDate;
     const isBlocked = blockedDates.includes(dateString);
+    const isNotAllowed = Boolean(allowedDates && allowedDates.length > 0 && !allowedDates.includes(dateString));
     const blockedReason = blockedReasonMap[dateString];
 
     calendarCells.push({
@@ -113,13 +141,14 @@ export function CustomCalendar({
       isSunday,
       isSaturday,
       isBlocked,
+      isNotAllowed,
       blockedReason,
       isRecommended,
     });
   }
 
   const handleCellClick = (cell: (typeof calendarCells)[0]) => {
-    if (!cell.day || cell.isPast || cell.isSunday || cell.isBlocked) return;
+    if (!cell.day || cell.isPast || cell.isSunday || cell.isBlocked || cell.isNotAllowed) return;
     onSelectDate(cell.dateString);
   };
 
@@ -176,7 +205,7 @@ export function CustomCalendar({
           }
 
           const isSelected = selectedDate === cell.dateString;
-          const isDisabled = cell.isPast || cell.isSunday || cell.isBlocked;
+          const isDisabled = cell.isPast || cell.isSunday || cell.isBlocked || cell.isNotAllowed;
 
           return (
             <button
@@ -184,7 +213,13 @@ export function CustomCalendar({
               type="button"
               disabled={isDisabled}
               onClick={() => handleCellClick(cell)}
-              title={cell.isBlocked ? (cell.blockedReason || "Kapacita výroby naplnená") : undefined}
+              title={
+                cell.isBlocked
+                  ? cell.blockedReason || "Kapacita výroby naplnená"
+                  : cell.isNotAllowed
+                  ? "Vianočné krabičky a čajové pečivo sa vydávajú výhradne 22. 12."
+                  : undefined
+              }
               className={`h-9 w-full rounded-xl text-xs font-semibold flex flex-col items-center justify-center relative transition-all duration-150 ${
                 isSelected
                   ? "bg-[#261B24] text-white shadow-md scale-105 ring-2 ring-[#a62891]"
@@ -206,10 +241,10 @@ export function CustomCalendar({
                 </span>
               ) : cell.isBlocked ? (
                 <span className="text-[7px] text-amber-700/80 -mt-0.5 leading-none font-medium">
-                  Obsadené
+                  {cell.dateString === "2026-12-22" ? "Iba Vianoce" : "Obsadené"}
                 </span>
               ) : null}
-              {!cell.isSunday && !cell.isBlocked && cell.isSaturday && !isSelected && (
+              {!cell.isSunday && !cell.isBlocked && !cell.isNotAllowed && cell.isSaturday && !isSelected && (
                 <span className="w-1 h-1 rounded-full bg-[#a62891] absolute bottom-1" />
               )}
             </button>

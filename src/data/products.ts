@@ -91,7 +91,7 @@ export const PRODUCTS: Product[] = [
     slug: "vianocna-krabicka-kremovych-zakuskov",
     price: 70.0,
     priceFormatted: "70 €",
-    description: "Slávnostný vianočný výber prémiových krémových zákuskov pečených z pravého masla a belgickej čokolády. Krabička obsahuje 27 ks:\n• 4× Karamelové veterníčky\n• 5× Doboška\n• 4× Punčový rez\n• 5× Grilážka pistáciovo-orechová\n• 4× Čokoládové tartaletky s ovocím\n• 5× Medovo-orechové rezy",
+    description: "Slávnostný vianočný výber prémiových krémových zákuskov pečených z pravého masla a belgickej čokolády. Osobný odber výhradne 22. 12. 2026.\nKrabička obsahuje 27 ks:\n• 4× Karamelové veterníčky\n• 5× Doboška\n• 4× Punčový rez\n• 5× Grilážka pistáciovo-orechová\n• 4× Čokoládové tartaletky s ovocím\n• 5× Medovo-orechové rezy",
     category: "vianoce",
     subcategory: "Vianočné boxy",
     image: "/images/products/vianocna-krabicka-kremovych-zakuskov.webp",
@@ -100,7 +100,7 @@ export const PRODUCTS: Product[] = [
       "/images/products/vianocna-krabicka-kremovych-zakuskov-2.webp"
     ],
     minQuantity: 1,
-    tag: "Vianočná limitka",
+    tag: "Odber iba 22. 12.",
     isPopular: true,
     servings: "27 ks"
   },
@@ -110,7 +110,7 @@ export const PRODUCTS: Product[] = [
     slug: "krabicka-cajoveho-peciva",
     price: 37.0,
     priceFormatted: "37 €",
-    description: "Tradičné vianočné čajové pečivo pečené s láskou z pravého 82% masla. Krabička (750g, cca 55 ks) obsahuje:\n• Linecké koláčiky s malinovým džemom\n• Krehké vanilkové rožteky\n• Plnené oriešky\n• Kakaové linecké s marhuľovým džemom\n• Kávové kolieska",
+    description: "Tradičné vianočné čajové pečivo pečené s láskou z pravého 82% masla. Osobný odber výhradne 22. 12. 2026.\nKrabička (750g, cca 55 ks) obsahuje:\n• Linecké koláčiky s malinovým džemom\n• Krehké vanilkové rožteky\n• Plnené oriešky\n• Kakaové linecké s marhuľovým džemom\n• Kávové kolieska",
     category: "vianoce",
     subcategory: "Vianočné pečivo",
     image: "/images/products/krabicka-cajoveho-peciva.webp",
@@ -119,7 +119,7 @@ export const PRODUCTS: Product[] = [
       "/images/products/krabicka-cajoveho-peciva-2.webp"
     ],
     minQuantity: 1,
-    tag: "Vianočná limitka",
+    tag: "Odber iba 22. 12.",
     isPopular: true,
     servings: "750g (cca 55 ks)"
   },
@@ -129,7 +129,7 @@ export const PRODUCTS: Product[] = [
     slug: "cesto-na-vianocne-pecenie",
     price: 10.0,
     priceFormatted: "10 €",
-    description: "Poctivo pripravené a odležané maslové cesto na vianočné pečenie z 82% masla a kvalitných surovín. Hmotnosť balenia 750g. Vyberte si požadovaný druh cesta: Cesto na medovníky, Cesto na linecké alebo Cesto na vanilkové rožteky.",
+    description: "Poctivo pripravené a odležané maslové cesto na vianočné pečenie z 82% masla a kvalitných surovín (odber možný kedykoľvek). Hmotnosť balenia 750g. Vyberte si požadovaný druh cesta: Cesto na medovníky, Cesto na linecké alebo Cesto na vanilkové rožteky.",
     category: "vianoce",
     subcategory: "Cestá",
     image: "/images/products/cesto-na-vianocne-pecenie.webp",

@@ -247,9 +247,14 @@ export default function ChristmasPopup() {
                   <p className="text-[11px] text-[#6B5B65] line-clamp-2 leading-relaxed">
                     Veterníčky, doboška, punčový rez, grilážka, čoko-tartaletky a medovo-orechové rezy.
                   </p>
-                  <span className="inline-block mt-1 text-[10px] font-medium text-[#a62891] bg-[#FAF1F8] px-2 py-0.5 rounded-md">
-                    27 ks krémových zákuskov
-                  </span>
+                  <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                    <span className="inline-block text-[10px] font-medium text-[#a62891] bg-[#FAF1F8] px-2 py-0.5 rounded-md">
+                      27 ks krémových zákuskov
+                    </span>
+                    <span className="inline-block text-[10px] font-semibold text-[#261B24] bg-[#F4EFE7] px-2 py-0.5 rounded-md border border-[#DFD8CD]">
+                      Odber iba 22. 12.
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -274,9 +279,14 @@ export default function ChristmasPopup() {
                   <p className="text-[11px] text-[#6B5B65] line-clamp-2 leading-relaxed">
                     Tradičné maslové linecké, vanilkové rožteky, plnené oriešky a kávové kolieska (cca 55 ks).
                   </p>
-                  <span className="inline-block mt-1 text-[10px] font-medium text-[#a62891] bg-[#FAF1F8] px-2 py-0.5 rounded-md">
-                    750g čajového pečiva
-                  </span>
+                  <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                    <span className="inline-block text-[10px] font-medium text-[#a62891] bg-[#FAF1F8] px-2 py-0.5 rounded-md">
+                      750g čajového pečiva
+                    </span>
+                    <span className="inline-block text-[10px] font-semibold text-[#261B24] bg-[#F4EFE7] px-2 py-0.5 rounded-md border border-[#DFD8CD]">
+                      Odber iba 22. 12.
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -292,18 +302,23 @@ export default function ChristmasPopup() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-baseline justify-between gap-2 mb-1">
                     <h3 className="font-serif text-sm font-bold text-[#261B24] truncate">
-                      Cesto na vianočné pečenie (1kg)
+                      Cesto na vianočné pečenie (750g)
                     </h3>
                     <span className="font-mono text-sm font-bold text-[#a62891] shrink-0">
-                      12 €
+                      10 €
                     </span>
                   </div>
                   <p className="text-[11px] text-[#6B5B65] line-clamp-2 leading-relaxed">
                     Pripravené maslové linecké, kakaové alebo orechové cesto na domáce pečenie bez námahy.
                   </p>
-                  <span className="inline-block mt-1 text-[10px] font-medium text-[#a62891] bg-[#FAF1F8] px-2 py-0.5 rounded-md">
-                    1kg hotového cesta
-                  </span>
+                  <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                    <span className="inline-block text-[10px] font-medium text-[#a62891] bg-[#FAF1F8] px-2 py-0.5 rounded-md">
+                      750g hotového cesta
+                    </span>
+                    <span className="inline-block text-[10px] font-medium text-[#6B5B65] bg-[#FAF8F5] px-2 py-0.5 rounded-md border border-[#EAE5DC]">
+                      Odber kedykoľvek
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>

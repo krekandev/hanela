@@ -32,7 +32,17 @@ export default function PonukaPage() {
   const [addedSuccess, setAddedSuccess] = useState<boolean>(false);
   const [selectedDoughVariant, setSelectedDoughVariant] = useState<string>("Cesto na medovníky");
 
-  const { addItem, totalQuantity } = useCart();
+  const { items: cartItems, addItem, totalQuantity } = useCart();
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const kat = params.get("kategoria") || params.get("category");
+      if (kat && CATEGORIES.some((c) => c.id === kat)) {
+        setActiveCategory(kat);
+      }
+    }
+  }, []);
 
   const openProductModal = (prod: Product) => {
     setSelectedProduct(prod);
@@ -44,7 +54,36 @@ export default function PonukaPage() {
 
   const handleAddToCart = () => {
     if (!selectedProduct) return;
+
+    const christmasBoxSlugs = ["vianocna-krabicka-kremovych-zakuskov", "krabicka-cajoveho-peciva"];
     const isDough = selectedProduct.slug === "cesto-na-vianocne-pecenie";
+    const isChristmasBox = christmasBoxSlugs.includes(selectedProduct.slug);
+    const isRegular = !isChristmasBox && !isDough;
+
+    const cartHasChristmasBox = cartItems.some((item) =>
+      christmasBoxSlugs.some((s) => item.slug === s || item.productId.startsWith(s))
+    );
+    const cartHasRegular = cartItems.some(
+      (item) =>
+        !christmasBoxSlugs.some((s) => item.slug === s || item.productId.startsWith(s)) &&
+        item.slug !== "cesto-na-vianocne-pecenie" &&
+        !item.productId.startsWith("cesto-na-vianocne-pecenie")
+    );
+
+    if (isChristmasBox && cartHasRegular) {
+      alert(
+        "Vianočné krabičky a čajové pečivo sa vydávajú výhradne 22. 12. 2026, kedy nie je možné objednať bežné torty a zákusky. Objednajte ich prosím samostatne (cesto na pečenie môžete kombinovať s oboma)."
+      );
+      return;
+    }
+
+    if (isRegular && cartHasChristmasBox) {
+      alert(
+        "V košíku máte vianočné pečivo s výhradným odberom 22. 12. 2026. Na 22. 12. sa bežné torty a zákusky neobjednávajú – vytvorte prosím pre bežné výrobky samostatnú objednávku na iný deň."
+      );
+      return;
+    }
+
     addItem({
       productId: isDough
         ? `${selectedProduct.id}-${selectedDoughVariant.toLowerCase().replace(/[^a-z0-9]/g, "-")}`
