@@ -534,12 +534,76 @@ function ReservationContent() {
     window.scrollTo({ top: 180, behavior: "smooth" });
   };
 
+  // Build a CartItem from the currently configured product
+  const buildCurrentConfiguredCartItem = (): CartItem | null => {
+    if (!selectedProduct) return null;
+    const isDough = selectedProduct.slug === "cesto-na-vianocne-pecenie";
+    const itemQuantity = selectedProduct.category === "zakusky" ? pieceCount : 1;
+    const unitPrice =
+      selectedProduct.category === "zakusky"
+        ? selectedProduct.price
+        : currentItemPrice;
+
+    const itemName = isDough
+      ? `${selectedProduct.name} – ${selectedDoughVariant}`
+      : selectedProduct.name;
+    const itemId = isDough
+      ? `${selectedProduct.id}-${selectedDoughVariant.toLowerCase().replace(/[^a-z0-9]/g, "-")}`
+      : selectedProduct.id;
+
+    return {
+      id: `item-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+      productId: itemId,
+      name: itemName,
+      slug: selectedProduct.slug,
+      category: selectedProduct.category,
+      image: selectedProduct.image,
+      unitPrice,
+      quantity: itemQuantity,
+      totalPrice: currentItemPrice,
+      size: selectedProduct.name === "TORTA podľa vlastného výberu" ? selectedSize : undefined,
+      korpus: selectedProduct.category === "torty-mieru" ? selectedKorpus : undefined,
+      krem: selectedProduct.category === "torty-mieru" ? selectedKrem : undefined,
+      doplnky: isDough
+        ? [`Druh: ${selectedDoughVariant}`]
+        : selectedDoplnky.length > 0
+        ? selectedDoplnky
+        : undefined,
+      diets: selectedDiets.length > 0 ? selectedDiets : undefined,
+      zdobenie: selectedZdobenie.length > 0 ? selectedZdobenie : undefined,
+      cakeNote: cakeNote.trim() || undefined,
+      servings:
+        selectedProduct.category === "zakusky"
+          ? `${pieceCount} ks`
+          : selectedProduct.servings,
+    };
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !phone || !email || !date) {
       alert("Prosím, vyplňte povinné polia (dátum, meno, telefón a e-mail).");
       return;
     }
+
+    // Guarantee items are never empty if a product was selected
+    let finalItems: CartItem[] = cartItems;
+    let finalTotalPrice: number = cartTotalPrice;
+
+    if (finalItems.length === 0 && selectedProduct) {
+      const fallbackItem = buildCurrentConfiguredCartItem();
+      if (fallbackItem) {
+        finalItems = [fallbackItem];
+        finalTotalPrice = fallbackItem.totalPrice;
+      }
+    }
+
+    if (finalItems.length === 0) {
+      alert("Vaša objednávka neobsahuje žiadny výrobok. Vyberte prosím aspoň jednu položku v kroku 1.");
+      setStep(1);
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const newOrder = await saveOrder({
@@ -552,8 +616,8 @@ function ReservationContent() {
           allergies,
           notes,
         },
-        items: cartItems,
-        totalPrice: cartTotalPrice,
+        items: finalItems,
+        totalPrice: finalTotalPrice,
         inspirationPhoto: inspirationPhoto || undefined,
       });
 
@@ -733,9 +797,7 @@ function ReservationContent() {
 
             <button
               type="button"
-              onClick={() => {
-                if (cartItems.length > 0 || selectedProduct) setStep(2);
-              }}
+              onClick={handleProceedToDate}
               className="text-left group transition-opacity cursor-pointer"
             >
               <span
@@ -754,6 +816,10 @@ function ReservationContent() {
             <button
               type="button"
               onClick={() => {
+                if (cartItems.length === 0 && selectedProduct) {
+                  const added = handleAddCurrentToCart();
+                  if (!added) return;
+                }
                 if ((cartItems.length > 0 || selectedProduct) && date) setStep(3);
               }}
               className="text-left group transition-opacity cursor-pointer"

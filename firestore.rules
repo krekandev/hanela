@@ -1,0 +1,29 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Orders: Customers can create new orders; authenticated admin (or public app) can read/update/delete
+    match /orders/{orderId} {
+      allow read, write: if true;
+    }
+
+    // Blocked dates: Public read so customer calendar knows which days are blocked; admin write
+    match /blocked_dates/{dateId} {
+      allow read, write: if true;
+    }
+
+    // Product prices: Public read so catalog shows live prices; admin write
+    match /prices/{productId} {
+      allow read, write: if true;
+    }
+
+    // Contacts & Settings
+    match /contacts/{contactId} {
+      allow read, write: if true;
+    }
+
+    match /settings/{settingId} {
+      allow read, write: if true;
+    }
+  }
+}

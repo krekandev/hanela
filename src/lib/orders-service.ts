@@ -105,27 +105,22 @@ function saveToStorage<T>(key: string, value: T): void {
 }
 
 /* -------------------------------------------------------------
- * ORDERS API
+ * ORDERS API (100% LIVE FIRESTORE)
  * ----------------------------------------------------------- */
 export async function getOrders(): Promise<Order[]> {
   if (isFirebaseConfigured && db) {
     try {
       const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
       const snapshot = await getDocs(q);
-      if (!snapshot.empty) {
-        const orders = snapshot.docs.map((docSnap) => ({
-          id: docSnap.id,
-          ...(docSnap.data() as Omit<Order, "id">),
-        }));
-        saveToStorage(STORAGE_KEY_ORDERS, orders);
-        return orders;
-      }
+      return snapshot.docs.map((docSnap) => ({
+        id: docSnap.id,
+        ...(docSnap.data() as Omit<Order, "id">),
+      }));
     } catch (err) {
-      console.warn("[Firestore] fetch orders error, falling back to local store:", err);
+      console.error("[Firestore] fetch orders error:", err);
     }
   }
-
-  return loadFromStorage<Order[]>(STORAGE_KEY_ORDERS, INITIAL_DEMO_ORDERS);
+  return [];
 }
 
 export function subscribeOrders(callback: (orders: Order[]) => void): () => void {
@@ -136,19 +131,13 @@ export function subscribeOrders(callback: (orders: Order[]) => void): () => void
     return () => {};
   }
 
-  // 1. Immediate emission for instant zero-flicker UI
-  callback(loadFromStorage<Order[]>(STORAGE_KEY_ORDERS, INITIAL_DEMO_ORDERS));
+  // Clear any legacy localStorage orders so stale local data is never used
+  try {
+    window.localStorage.removeItem(STORAGE_KEY_ORDERS);
+  } catch {
+    // ignore
+  }
 
-  // 2. Storage event listener for offline/local sync
-  const handleStorageUpdate = () => {
-    if (isUnsubscribed) return;
-    callback(loadFromStorage<Order[]>(STORAGE_KEY_ORDERS, INITIAL_DEMO_ORDERS));
-  };
-
-  window.addEventListener("hanela-storage-update", handleStorageUpdate);
-  window.addEventListener("storage", handleStorageUpdate);
-
-  // 3. Attach real-time Firestore listener
   if (isFirebaseConfigured && db) {
     try {
       const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
@@ -160,22 +149,17 @@ export function subscribeOrders(callback: (orders: Order[]) => void): () => void
             id: d.id,
             ...(d.data() as Omit<Order, "id">),
           }));
-          saveToStorage(STORAGE_KEY_ORDERS, orders);
           callback(orders);
         },
         (error) => {
-          console.warn("[Firestore] subscribeOrders snapshot error, fallback to local:", error);
-          if (!isUnsubscribed) {
-            handleStorageUpdate();
-          }
+          console.error("[Firestore] subscribeOrders snapshot error:", error);
         }
       );
     } catch (err) {
-      console.warn("[Firestore] Failed to attach orders listener:", err);
+      console.error("[Firestore] Failed to attach orders listener:", err);
     }
   }
 
-  // 4. Return instant unsubscription callback
   return () => {
     isUnsubscribed = true;
     if (unsubFirestore) {
@@ -186,8 +170,6 @@ export function subscribeOrders(callback: (orders: Order[]) => void): () => void
       }
       unsubFirestore = null;
     }
-    window.removeEventListener("hanela-storage-update", handleStorageUpdate);
-    window.removeEventListener("storage", handleStorageUpdate);
   };
 }
 
@@ -211,12 +193,25 @@ export async function saveOrder(orderData: {
   internalNote?: string;
   inspirationPhoto?: OrderInspirationPhoto;
 } | Order): Promise<Order> {
-  const currentOrders = loadFromStorage<Order[]>(STORAGE_KEY_ORDERS, INITIAL_DEMO_ORDERS);
-  const nextSeq = currentOrders.length + 1;
   const year = new Date().getFullYear();
-  const orderNumber = orderData.orderNumber || `HAN-${year}-${String(nextSeq).padStart(3, "0")}`;
   const randomSuffix = Math.random().toString(36).substring(2, 7);
   const id = orderData.id || `ord-${Date.now()}-${randomSuffix}`;
+
+  // Generate a unique order number based on live Firestore count or timestamp code
+  let orderNumber = orderData.orderNumber;
+  if (!orderNumber) {
+    let nextSeq = 1;
+    if (isFirebaseConfigured && db) {
+      try {
+        const snap = await getDocs(collection(db, "orders"));
+        nextSeq = snap.size + 1;
+      } catch {
+        nextSeq = Math.floor(100 + Math.random() * 900);
+      }
+    }
+    const shortRand = Math.random().toString(36).substring(2, 4).toUpperCase();
+    orderNumber = `HAN-${year}-${String(nextSeq).padStart(3, "0")}-${shortRand}`;
+  }
 
   const newOrder: Order = {
     id,
@@ -234,118 +229,74 @@ export async function saveOrder(orderData: {
     emailSentAt: new Date().toISOString(),
   };
 
-  if (isFirebaseConfigured && db) {
-    try {
-      const sanitized = cleanForFirestore(newOrder);
-      await setDoc(doc(db, "orders", id), sanitized);
-      console.log(`[Firestore] Order ${id} (${orderNumber}) successfully saved to Firestore.`);
-    } catch (err) {
-      console.error("[Firestore] saveOrder failed to write to Firestore:", err);
-    }
+  if (!isFirebaseConfigured || !db) {
+    throw new Error("Firestore databáza nie je pripojená.");
   }
 
-  saveToStorage(STORAGE_KEY_ORDERS, [newOrder, ...currentOrders.filter((o) => o.id !== id)]);
+  const sanitized = cleanForFirestore(newOrder);
+  await setDoc(doc(db, "orders", id), sanitized);
+  console.log(`[Firestore] Order ${id} (${orderNumber}) successfully saved to Firestore.`);
   return newOrder;
 }
 
 export async function removeOrderInspirationPhoto(orderId: string): Promise<void> {
-  const current = loadFromStorage<Order[]>(STORAGE_KEY_ORDERS, INITIAL_DEMO_ORDERS);
-  const target = current.find((ord) => ord.id === orderId);
-  if (!target) return;
+  if (!isFirebaseConfigured || !db) return;
 
-  if (target.inspirationPhoto?.storagePath) {
-    try {
-      const { deleteCakeInspirationPhoto } = await import("./image-upload");
-      await deleteCakeInspirationPhoto(target.inspirationPhoto.storagePath);
-    } catch (e) {
-      console.warn("Failed to delete from storage:", e);
+  try {
+    const snap = await getDoc(doc(db, "orders", orderId));
+    if (snap.exists()) {
+      const target = snap.data() as Order;
+      if (target.inspirationPhoto?.storagePath) {
+        try {
+          const { deleteCakeInspirationPhoto } = await import("./image-upload");
+          await deleteCakeInspirationPhoto(target.inspirationPhoto.storagePath);
+        } catch (e) {
+          console.warn("Failed to delete from storage:", e);
+        }
+      }
     }
+    await updateDoc(doc(db, "orders", orderId), { inspirationPhoto: deleteField() });
+  } catch (err) {
+    console.error("[Firestore] removeOrderInspirationPhoto failed:", err);
   }
-
-  if (isFirebaseConfigured && db) {
-    try {
-      await updateDoc(doc(db, "orders", orderId), { inspirationPhoto: deleteField() });
-    } catch (err) {
-      console.warn("[Firestore] removeOrderInspirationPhoto failed:", err);
-    }
-  }
-
-  const updated = current.map((ord) => {
-    if (ord.id === orderId) {
-      const copy = { ...ord };
-      delete copy.inspirationPhoto;
-      return copy;
-    }
-    return ord;
-  });
-  saveToStorage(STORAGE_KEY_ORDERS, updated);
 }
 
 export async function updateOrderStatus(orderId: string, status: OrderStatus): Promise<void> {
-  const current = loadFromStorage<Order[]>(STORAGE_KEY_ORDERS, INITIAL_DEMO_ORDERS);
-  const exists = current.some((ord) => ord.id === orderId);
-  if (!exists) {
-    throw new Error(`Order ${orderId} not found`);
+  if (!isFirebaseConfigured || !db) {
+    throw new Error("Firestore databáza nie je pripojená.");
   }
-
-  if (isFirebaseConfigured && db) {
-    try {
-      await updateDoc(doc(db, "orders", orderId), { status });
-    } catch (err) {
-      console.warn("[Firestore] updateOrderStatus failed:", err);
-    }
-  }
-
-  const updated = current.map((ord) => (ord.id === orderId ? { ...ord, status } : ord));
-  saveToStorage(STORAGE_KEY_ORDERS, updated);
+  await updateDoc(doc(db, "orders", orderId), { status });
 }
 
 export async function updateOrderInternalNote(orderId: string, note: string): Promise<void> {
-  const current = loadFromStorage<Order[]>(STORAGE_KEY_ORDERS, INITIAL_DEMO_ORDERS);
-  const exists = current.some((ord) => ord.id === orderId);
-  if (!exists) {
-    throw new Error(`Order ${orderId} not found`);
+  if (!isFirebaseConfigured || !db) {
+    throw new Error("Firestore databáza nie je pripojená.");
   }
-
-  if (isFirebaseConfigured && db) {
-    try {
-      await updateDoc(doc(db, "orders", orderId), { internalNote: note });
-    } catch (err) {
-      console.warn("[Firestore] updateOrderInternalNote failed:", err);
-    }
-  }
-
-  const updated = current.map((ord) => (ord.id === orderId ? { ...ord, internalNote: note } : ord));
-  saveToStorage(STORAGE_KEY_ORDERS, updated);
+  await updateDoc(doc(db, "orders", orderId), { internalNote: note });
 }
 
 export async function deleteOrder(orderId: string): Promise<void> {
-  const current = loadFromStorage<Order[]>(STORAGE_KEY_ORDERS, INITIAL_DEMO_ORDERS);
-  const target = current.find((ord) => ord.id === orderId);
+  if (!isFirebaseConfigured || !db) {
+    throw new Error("Firestore databáza nie je pripojená.");
+  }
 
   // 1. Delete inspiration photo from Firebase Storage if present
-  if (target?.inspirationPhoto?.storagePath) {
-    try {
-      const { deleteCakeInspirationPhoto } = await import("./image-upload");
-      await deleteCakeInspirationPhoto(target.inspirationPhoto.storagePath);
-    } catch (e) {
-      console.warn("Failed to delete photo from storage during order deletion:", e);
+  try {
+    const snap = await getDoc(doc(db, "orders", orderId));
+    if (snap.exists()) {
+      const target = snap.data() as Order;
+      if (target?.inspirationPhoto?.storagePath) {
+        const { deleteCakeInspirationPhoto } = await import("./image-upload");
+        await deleteCakeInspirationPhoto(target.inspirationPhoto.storagePath);
+      }
     }
+  } catch (e) {
+    console.warn("Failed to delete photo from storage during order deletion:", e);
   }
 
   // 2. Delete document from Firestore
-  if (isFirebaseConfigured && db) {
-    try {
-      await deleteDoc(doc(db, "orders", orderId));
-      console.log(`[Firestore] Order ${orderId} successfully deleted from Firestore.`);
-    } catch (err) {
-      console.error("[Firestore] deleteOrder failed:", err);
-    }
-  }
-
-  // 3. Delete from local storage
-  const updated = current.filter((ord) => ord.id !== orderId);
-  saveToStorage(STORAGE_KEY_ORDERS, updated);
+  await deleteDoc(doc(db, "orders", orderId));
+  console.log(`[Firestore] Order ${orderId} successfully deleted from Firestore.`);
 }
 
 export async function getOrder(orderId: string): Promise<Order | null> {
@@ -356,35 +307,25 @@ export async function getOrder(orderId: string): Promise<Order | null> {
         return { id: snap.id, ...snap.data() } as Order;
       }
     } catch (e) {
-      console.warn("[Firestore] getOrder failed:", e);
+      console.error("[Firestore] getOrder failed:", e);
     }
   }
-
-  const current = loadFromStorage<Order[]>(STORAGE_KEY_ORDERS, INITIAL_DEMO_ORDERS);
-  return current.find((o) => o.id === orderId || o.orderNumber === orderId) || null;
+  return null;
 }
 
 /* -------------------------------------------------------------
- * BLOCKED DATES API
+ * BLOCKED DATES API (100% LIVE FIRESTORE)
  * ----------------------------------------------------------- */
 export async function getBlockedDates(): Promise<BlockedDate[]> {
   if (isFirebaseConfigured && db) {
     try {
       const snapshot = await getDocs(collection(db, "blocked_dates"));
-      if (!snapshot.empty) {
-        const dates = snapshot.docs.map((d) => d.data() as BlockedDate);
-        saveToStorage(STORAGE_KEY_BLOCKED_DATES, dates);
-        return dates;
-      }
+      return snapshot.docs.map((d) => d.data() as BlockedDate);
     } catch (err) {
-      console.warn("[Firestore] getBlockedDates failed:", err);
+      console.error("[Firestore] getBlockedDates failed:", err);
     }
   }
-
-  return loadFromStorage<BlockedDate[]>(
-    STORAGE_KEY_BLOCKED_DATES,
-    INITIAL_DEMO_BLOCKED_DATES
-  );
+  return [];
 }
 
 export function subscribeBlockedDates(callback: (dates: BlockedDate[]) => void): () => void {
@@ -395,15 +336,11 @@ export function subscribeBlockedDates(callback: (dates: BlockedDate[]) => void):
     return () => {};
   }
 
-  callback(loadFromStorage<BlockedDate[]>(STORAGE_KEY_BLOCKED_DATES, INITIAL_DEMO_BLOCKED_DATES));
-
-  const handleStorageUpdate = () => {
-    if (isUnsubscribed) return;
-    callback(loadFromStorage<BlockedDate[]>(STORAGE_KEY_BLOCKED_DATES, INITIAL_DEMO_BLOCKED_DATES));
-  };
-
-  window.addEventListener("hanela-storage-update", handleStorageUpdate);
-  window.addEventListener("storage", handleStorageUpdate);
+  try {
+    window.localStorage.removeItem(STORAGE_KEY_BLOCKED_DATES);
+  } catch {
+    // ignore
+  }
 
   if (isFirebaseConfigured && db) {
     try {
@@ -412,18 +349,14 @@ export function subscribeBlockedDates(callback: (dates: BlockedDate[]) => void):
         (snapshot) => {
           if (isUnsubscribed) return;
           const dates = snapshot.docs.map((d) => d.data() as BlockedDate);
-          saveToStorage(STORAGE_KEY_BLOCKED_DATES, dates);
           callback(dates);
         },
         (error) => {
-          console.warn("[Firestore] subscribeBlockedDates snapshot error:", error);
-          if (!isUnsubscribed) {
-            handleStorageUpdate();
-          }
+          console.error("[Firestore] subscribeBlockedDates snapshot error:", error);
         }
       );
     } catch (err) {
-      console.warn("[Firestore] Failed to attach blocked_dates listener:", err);
+      console.error("[Firestore] Failed to attach blocked_dates listener:", err);
     }
   }
 
@@ -437,8 +370,6 @@ export function subscribeBlockedDates(callback: (dates: BlockedDate[]) => void):
       }
       unsubFirestore = null;
     }
-    window.removeEventListener("hanela-storage-update", handleStorageUpdate);
-    window.removeEventListener("storage", handleStorageUpdate);
   };
 }
 
@@ -453,39 +384,18 @@ export async function blockDate(date: string, reason: string): Promise<void> {
     createdAt: new Date().toISOString(),
   };
 
-  if (isFirebaseConfigured && db) {
-    try {
-      await setDoc(doc(db, "blocked_dates", date), item);
-    } catch (err) {
-      console.warn("[Firestore] blockDate failed:", err);
-    }
+  if (!isFirebaseConfigured || !db) {
+    throw new Error("Firestore databáza nie je pripojená.");
   }
 
-  const current = loadFromStorage<BlockedDate[]>(
-    STORAGE_KEY_BLOCKED_DATES,
-    INITIAL_DEMO_BLOCKED_DATES
-  );
-  const filtered = current.filter((b) => b.date !== date);
-  saveToStorage(STORAGE_KEY_BLOCKED_DATES, [...filtered, item]);
+  await setDoc(doc(db, "blocked_dates", date), item);
 }
 
 export async function unblockDate(date: string): Promise<void> {
-  if (isFirebaseConfigured && db) {
-    try {
-      await deleteDoc(doc(db, "blocked_dates", date));
-    } catch (err) {
-      console.warn("[Firestore] unblockDate failed:", err);
-    }
+  if (!isFirebaseConfigured || !db) {
+    throw new Error("Firestore databáza nie je pripojená.");
   }
-
-  const current = loadFromStorage<BlockedDate[]>(
-    STORAGE_KEY_BLOCKED_DATES,
-    INITIAL_DEMO_BLOCKED_DATES
-  );
-  saveToStorage(
-    STORAGE_KEY_BLOCKED_DATES,
-    current.filter((b) => b.date !== date)
-  );
+  await deleteDoc(doc(db, "blocked_dates", date));
 }
 
 /* -------------------------------------------------------------
@@ -495,22 +405,18 @@ export async function getProductPrices(): Promise<Record<string, ProductPriceDoc
   if (isFirebaseConfigured && db) {
     try {
       const snapshot = await getDocs(collection(db, "prices"));
-      if (!snapshot.empty) {
-        const pricesMap: Record<string, ProductPriceDoc> = {};
-        snapshot.docs.forEach((docSnap) => {
-          const data = docSnap.data() as ProductPriceDoc;
-          const id = docSnap.id || data.productId;
-          pricesMap[id] = { ...data, productId: id };
-        });
-        saveToStorage(STORAGE_KEY_PRICES, pricesMap);
-        return pricesMap;
-      }
+      const pricesMap: Record<string, ProductPriceDoc> = {};
+      snapshot.docs.forEach((docSnap) => {
+        const data = docSnap.data() as ProductPriceDoc;
+        const id = docSnap.id || data.productId;
+        pricesMap[id] = { ...data, productId: id };
+      });
+      return pricesMap;
     } catch (err) {
-      console.warn("[Firestore] getProductPrices failed:", err);
+      console.error("[Firestore] getProductPrices failed:", err);
     }
   }
-
-  return loadFromStorage<Record<string, ProductPriceDoc>>(STORAGE_KEY_PRICES, {});
+  return {};
 }
 
 export function subscribePrices(
@@ -522,16 +428,6 @@ export function subscribePrices(
   if (typeof window === "undefined") {
     return () => {};
   }
-
-  callback(loadFromStorage<Record<string, ProductPriceDoc>>(STORAGE_KEY_PRICES, {}));
-
-  const handleStorageUpdate = () => {
-    if (isUnsubscribed) return;
-    callback(loadFromStorage<Record<string, ProductPriceDoc>>(STORAGE_KEY_PRICES, {}));
-  };
-
-  window.addEventListener("hanela-storage-update", handleStorageUpdate);
-  window.addEventListener("storage", handleStorageUpdate);
 
   if (isFirebaseConfigured && db) {
     try {
@@ -545,18 +441,14 @@ export function subscribePrices(
             const id = docSnap.id || data.productId;
             pricesMap[id] = { ...data, productId: id };
           });
-          saveToStorage(STORAGE_KEY_PRICES, pricesMap);
           callback(pricesMap);
         },
         (error) => {
-          console.warn("[Firestore] subscribePrices snapshot error:", error);
-          if (!isUnsubscribed) {
-            handleStorageUpdate();
-          }
+          console.error("[Firestore] subscribePrices snapshot error:", error);
         }
       );
     } catch (err) {
-      console.warn("[Firestore] Failed to attach prices listener:", err);
+      console.error("[Firestore] Failed to attach prices listener:", err);
     }
   }
 
@@ -570,8 +462,6 @@ export function subscribePrices(
       }
       unsubFirestore = null;
     }
-    window.removeEventListener("hanela-storage-update", handleStorageUpdate);
-    window.removeEventListener("storage", handleStorageUpdate);
   };
 }
 
@@ -584,50 +474,28 @@ export async function saveProductPrice(
     throw new Error(`Price cannot be negative: ${price}`);
   }
 
-  const current = loadFromStorage<Record<string, ProductPriceDoc>>(STORAGE_KEY_PRICES, {});
   const productMeta = PRODUCTS.find((p) => p.id === productId);
-
-  const resolvedPrice = price !== undefined ? price : (current[productId]?.price ?? (productMeta?.price || 0));
+  const resolvedPrice = price !== undefined ? price : (productMeta?.price || 0);
 
   const priceDoc: ProductPriceDoc = {
     productId,
-    name: productMeta?.name || current[productId]?.name || productId,
+    name: productMeta?.name || productId,
     price: resolvedPrice,
-    category: productMeta?.category || current[productId]?.category || "ostatne",
+    category: productMeta?.category || "ostatne",
     updatedAt: new Date().toISOString(),
     isAvailable: isAvailable ?? true,
   };
 
-  if (isFirebaseConfigured && db) {
-    try {
-      await setDoc(doc(db, "prices", productId), cleanForFirestore(priceDoc), { merge: true });
-    } catch (err) {
-      console.warn("[Firestore] saveProductPrice failed, saving to local store:", err);
-    }
+  if (!isFirebaseConfigured || !db) {
+    throw new Error("Firestore databáza nie je pripojená.");
   }
 
-  current[productId] = priceDoc;
-  saveToStorage(STORAGE_KEY_PRICES, current);
-
-  // Sync to legacy overrides store for compatibility
-  const legacyOverrides = loadFromStorage<Record<string, ProductPriceOverride>>(
-    STORAGE_KEY_PRODUCT_OVERRIDES,
-    {}
-  );
-  legacyOverrides[productId] = { productId, price: resolvedPrice, isAvailable };
-  saveToStorage(STORAGE_KEY_PRODUCT_OVERRIDES, legacyOverrides);
+  await setDoc(doc(db, "prices", productId), cleanForFirestore(priceDoc), { merge: true });
 }
 
 // Backward compatibility helpers for catalog & legacy tabs
 export function getProductOverrides(): Record<string, ProductPriceOverride> {
-  const prices = loadFromStorage<Record<string, ProductPriceDoc>>(STORAGE_KEY_PRICES, {});
-  if (Object.keys(prices).length > 0) {
-    return prices;
-  }
-  return loadFromStorage<Record<string, ProductPriceOverride>>(
-    STORAGE_KEY_PRODUCT_OVERRIDES,
-    {}
-  );
+  return {};
 }
 
 export function saveProductOverride(
@@ -637,21 +505,11 @@ export function saveProductOverride(
 ): void {
   if (price !== undefined) {
     void saveProductPrice(productId, price, isAvailable);
-  } else {
-    const legacy = loadFromStorage<Record<string, ProductPriceOverride>>(
-      STORAGE_KEY_PRODUCT_OVERRIDES,
-      {}
-    );
-    legacy[productId] = { productId, price, isAvailable };
-    saveToStorage(STORAGE_KEY_PRODUCT_OVERRIDES, legacy);
   }
 }
 
 export function getCakeSizes(): CakeSizeOverride[] {
-  return loadFromStorage<CakeSizeOverride[]>(
-    STORAGE_KEY_CAKE_SIZES,
-    DEFAULT_CAKE_SIZES
-  );
+  return DEFAULT_CAKE_SIZES;
 }
 
 export function saveCakeSizes(sizes: CakeSizeOverride[]): void {
@@ -659,26 +517,22 @@ export function saveCakeSizes(sizes: CakeSizeOverride[]): void {
 }
 
 /* -------------------------------------------------------------
- * MANUAL CONTACTS & NEWSLETTER SUBSCRIBERS
+ * MANUAL CONTACTS & NEWSLETTER SUBSCRIBERS (100% LIVE FIRESTORE)
  * ----------------------------------------------------------- */
 export async function getManualContacts(): Promise<ManualContact[]> {
   if (isFirebaseConfigured && db) {
     try {
       const q = query(collection(db, "contacts"), orderBy("createdAt", "desc"));
       const snapshot = await getDocs(q);
-      if (!snapshot.empty) {
-        const contacts = snapshot.docs.map((docSnap) => ({
-          id: docSnap.id,
-          ...(docSnap.data() as Omit<ManualContact, "id">),
-        }));
-        saveToStorage(STORAGE_KEY_MANUAL_CONTACTS, contacts);
-        return contacts;
-      }
+      return snapshot.docs.map((docSnap) => ({
+        id: docSnap.id,
+        ...(docSnap.data() as Omit<ManualContact, "id">),
+      }));
     } catch (err) {
-      console.warn("[Firestore] fetch contacts error:", err);
+      console.error("[Firestore] fetch contacts error:", err);
     }
   }
-  return loadFromStorage<ManualContact[]>(STORAGE_KEY_MANUAL_CONTACTS, []);
+  return [];
 }
 
 export function subscribeManualContacts(callback: (contacts: ManualContact[]) => void): () => void {
@@ -689,15 +543,11 @@ export function subscribeManualContacts(callback: (contacts: ManualContact[]) =>
     return () => {};
   }
 
-  callback(loadFromStorage<ManualContact[]>(STORAGE_KEY_MANUAL_CONTACTS, []));
-
-  const handleStorageUpdate = () => {
-    if (isUnsubscribed) return;
-    callback(loadFromStorage<ManualContact[]>(STORAGE_KEY_MANUAL_CONTACTS, []));
-  };
-
-  window.addEventListener("hanela-storage-update", handleStorageUpdate);
-  window.addEventListener("storage", handleStorageUpdate);
+  try {
+    window.localStorage.removeItem(STORAGE_KEY_MANUAL_CONTACTS);
+  } catch {
+    // ignore
+  }
 
   if (isFirebaseConfigured && db) {
     try {
@@ -710,18 +560,14 @@ export function subscribeManualContacts(callback: (contacts: ManualContact[]) =>
             id: d.id,
             ...(d.data() as Omit<ManualContact, "id">),
           }));
-          saveToStorage(STORAGE_KEY_MANUAL_CONTACTS, contacts);
           callback(contacts);
         },
         (error) => {
-          console.warn("[Firestore] subscribeManualContacts snapshot error:", error);
-          if (!isUnsubscribed) {
-            handleStorageUpdate();
-          }
+          console.error("[Firestore] subscribeManualContacts snapshot error:", error);
         }
       );
     } catch (err) {
-      console.warn("[Firestore] Failed to attach contacts listener:", err);
+      console.error("[Firestore] Failed to attach contacts listener:", err);
     }
   }
 
@@ -735,8 +581,6 @@ export function subscribeManualContacts(callback: (contacts: ManualContact[]) =>
       }
       unsubFirestore = null;
     }
-    window.removeEventListener("hanela-storage-update", handleStorageUpdate);
-    window.removeEventListener("storage", handleStorageUpdate);
   };
 }
 
@@ -746,7 +590,6 @@ export async function saveManualContact(contactData: {
   phone?: string;
   note?: string;
 }): Promise<ManualContact> {
-  const current = loadFromStorage<ManualContact[]>(STORAGE_KEY_MANUAL_CONTACTS, []);
   const id = `cnt-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
   const newContact: ManualContact = {
     id,
@@ -757,30 +600,19 @@ export async function saveManualContact(contactData: {
     createdAt: new Date().toISOString(),
   };
 
-  if (isFirebaseConfigured && db) {
-    try {
-      await setDoc(doc(db, "contacts", id), cleanForFirestore(newContact));
-    } catch (err) {
-      console.warn("[Firestore] saveManualContact failed, fallback to local:", err);
-    }
+  if (!isFirebaseConfigured || !db) {
+    throw new Error("Firestore databáza nie je pripojená.");
   }
 
-  const updated = [newContact, ...current.filter((c) => c.id !== id)];
-  saveToStorage(STORAGE_KEY_MANUAL_CONTACTS, updated);
+  await setDoc(doc(db, "contacts", id), cleanForFirestore(newContact));
   return newContact;
 }
 
 export async function deleteManualContact(contactId: string): Promise<void> {
-  const current = loadFromStorage<ManualContact[]>(STORAGE_KEY_MANUAL_CONTACTS, []);
-  if (isFirebaseConfigured && db) {
-    try {
-      await deleteDoc(doc(db, "contacts", contactId));
-    } catch (err) {
-      console.warn("[Firestore] deleteManualContact failed:", err);
-    }
+  if (!isFirebaseConfigured || !db) {
+    throw new Error("Firestore databáza nie je pripojená.");
   }
-  const updated = current.filter((c) => c.id !== contactId);
-  saveToStorage(STORAGE_KEY_MANUAL_CONTACTS, updated);
+  await deleteDoc(doc(db, "contacts", contactId));
 }
 
 /* -------------------------------------------------------------

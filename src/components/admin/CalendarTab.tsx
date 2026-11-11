@@ -237,7 +237,23 @@ export function CalendarTab({
           <h2 className="font-serif text-lg font-semibold text-[#261B24]">
             {MONTH_NAMES[currentMonth]} {currentYear}
           </h2>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => {
+                setCurrentYear(2026);
+                setCurrentMonth(11);
+                onSelectDay("2026-12-22");
+              }}
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-colors cursor-pointer ${
+                selectedDayStr === "2026-12-22"
+                  ? "bg-[#a62891] text-white border-[#a62891]"
+                  : "bg-[#FAF1F8] text-[#a62891] border-[#ECD9E8] hover:bg-[#f3e1ef]"
+              }`}
+              title="Prejsť priamo na vianočný výdaj 22. 12. 2026"
+            >
+              Vianoce 22. 12. ({orders.filter((o) => o.pickupDate === "2026-12-22" && o.status !== "zrusena").length})
+            </button>
             <button
               type="button"
               onClick={handlePrevMonth}

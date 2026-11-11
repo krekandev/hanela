@@ -111,6 +111,16 @@ export function OrdersTab({
   };
 
   // Diacritic-insensitive filtering helper
+  const isChristmasOrder = (order: Order) =>
+    order.pickupDate === "2026-12-22" ||
+    order.items?.some(
+      (it) =>
+        it.category === "vianoce" ||
+        it.slug === "vianocna-krabicka-kremovych-zakuskov" ||
+        it.slug === "krabicka-cajoveho-peciva" ||
+        it.slug === "cesto-na-vianocne-pecenie"
+    );
+
   const filteredOrders = useMemo(() => {
     const stripDiacritics = (s: string) =>
       s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
@@ -118,7 +128,9 @@ export function OrdersTab({
     const q = stripDiacritics(searchQuery.trim());
 
     return orders.filter((order) => {
-      if (statusFilter !== "all" && order.status !== statusFilter) {
+      if (statusFilter === "vianoce") {
+        if (!isChristmasOrder(order)) return false;
+      } else if (statusFilter !== "all" && order.status !== statusFilter) {
         return false;
       }
       if (!q) return true;
@@ -127,16 +139,20 @@ export function OrdersTab({
       const matchName = stripDiacritics(order.customer.name).includes(q);
       const matchPhone = stripDiacritics(order.customer.phone).includes(q);
       const matchEmail = stripDiacritics(order.customer.email || "").includes(q);
+      const matchItems = order.items?.some((it) => stripDiacritics(it.name || "").includes(q));
 
-      return matchNum || matchName || matchPhone || matchEmail;
+      return matchNum || matchName || matchPhone || matchEmail || matchItems;
     });
   }, [orders, searchQuery, statusFilter]);
 
   // Compute status counts for filter pills
   const statusCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: orders.length };
+    const counts: Record<string, number> = { all: orders.length, vianoce: 0 };
     for (const ord of orders) {
       counts[ord.status] = (counts[ord.status] || 0) + 1;
+      if (isChristmasOrder(ord)) {
+        counts.vianoce += 1;
+      }
     }
     return counts;
   }, [orders]);
@@ -168,7 +184,7 @@ export function OrdersTab({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Vyhľadávať podľa mena, telefónu, emailu alebo čísla zákazky (napr. HAN-2026-001)..."
+            placeholder="Vyhľadávať podľa mena, telefónu, emailu, produktu alebo čísla zákazky..."
             className="w-full pl-10 pr-4 py-2.5 bg-[#FAF8F5] text-sm text-[#261B24] placeholder-[#9E8E98] rounded-xl border border-[#EAE5DC] focus:bg-[#FFFFFF] focus:outline-none focus:border-[#a62891] transition-all"
           />
           {searchQuery && (
@@ -195,6 +211,19 @@ export function OrdersTab({
           >
             <span>Všetky</span>
             <span className="ml-1.5 opacity-70 font-mono">({statusCounts.all || 0})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setStatusFilter("vianoce")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap cursor-pointer border ${
+              statusFilter === "vianoce"
+                ? "bg-[#a62891] text-white border-[#a62891] shadow-xs font-semibold"
+                : "bg-[#FAF1F8] text-[#a62891] hover:bg-[#f3e1ef] border-[#ECD9E8]"
+            }`}
+          >
+            <span>Vianoce (22. 12.)</span>
+            <span className="ml-1.5 opacity-80 font-mono">({statusCounts.vianoce || 0})</span>
           </button>
 
           {(["nova", "vyroba", "pripravena", "odovzdana", "zrusena"] as OrderStatus[]).map(
@@ -243,6 +272,7 @@ export function OrdersTab({
           {filteredOrders.map((order) => {
             const token = ORDER_STATUS_TOKENS[order.status];
             const nextStatus = STATUS_PROGRESSION[order.status];
+            const christmas = isChristmasOrder(order);
 
             return (
               <div
@@ -269,6 +299,12 @@ export function OrdersTab({
                       />
                       <span>{token.label}</span>
                     </span>
+
+                    {christmas && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#a62891] text-white">
+                        <span>Vianoce</span>
+                      </span>
+                    )}
 
                     {order.inspirationPhoto?.url && (
                       <span
@@ -303,8 +339,15 @@ export function OrdersTab({
                     )}
                   </div>
 
+                  {/* Ordered items inline preview */}
+                  {order.items && order.items.length > 0 && (
+                    <div className="text-xs font-medium text-[#261B24] bg-[#FAF8F5] border border-[#EAE5DC] rounded-lg px-2.5 py-1.5">
+                      {order.items.map((it) => `${it.quantity}× ${it.name}`).join(" • ")}
+                    </div>
+                  )}
+
                   {/* Order pickup timing & items summary */}
-                  <div className="text-xs text-[#6B5B65] flex flex-wrap items-center gap-x-3 gap-y-1 pt-1">
+                  <div className="text-xs text-[#6B5B65] flex flex-wrap items-center gap-x-3 gap-y-1 pt-0.5">
                     <span className="inline-flex items-center gap-1 font-mono text-[#261B24] font-medium">
                       <Clock className="w-3.5 h-3.5 text-[#a62891]" />
                       <span>{order.pickupDate} o {order.pickupTime}</span>
