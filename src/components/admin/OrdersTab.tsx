@@ -17,6 +17,7 @@ import {
   Trash2,
   Maximize2,
   Download,
+  Plus,
 } from "lucide-react";
 import {
   Order,
@@ -32,6 +33,7 @@ interface OrdersTabProps {
   onUpdateInternalNote: (orderId: string, note: string) => Promise<void>;
   onPrintReceipt: (order: Order) => void;
   onDeleteOrder?: (orderId: string) => Promise<void>;
+  onOpenNewOrder?: () => void;
 }
 
 const STATUS_PROGRESSION: Record<OrderStatus, OrderStatus | null> = {
@@ -54,6 +56,7 @@ export function OrdersTab({
   onUpdateInternalNote,
   onPrintReceipt,
   onDeleteOrder,
+  onOpenNewOrder,
 }: OrdersTabProps) {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -130,6 +133,10 @@ export function OrdersTab({
     return orders.filter((order) => {
       if (statusFilter === "vianoce") {
         if (!isChristmasOrder(order)) return false;
+      } else if (statusFilter === "web") {
+        if (order.source === "manual") return false;
+      } else if (statusFilter === "manual") {
+        if (order.source !== "manual") return false;
       } else if (statusFilter !== "all" && order.status !== statusFilter) {
         return false;
       }
@@ -147,11 +154,21 @@ export function OrdersTab({
 
   // Compute status counts for filter pills
   const statusCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: orders.length, vianoce: 0 };
+    const counts: Record<string, number> = {
+      all: orders.length,
+      vianoce: 0,
+      web: 0,
+      manual: 0,
+    };
     for (const ord of orders) {
       counts[ord.status] = (counts[ord.status] || 0) + 1;
       if (isChristmasOrder(ord)) {
         counts.vianoce += 1;
+      }
+      if (ord.source === "manual") {
+        counts.manual += 1;
+      } else {
+        counts.web += 1;
       }
     }
     return counts;
@@ -177,82 +194,125 @@ export function OrdersTab({
     <div className="space-y-5">
       {/* Search & Status Filter Controls Bar */}
       <div className="bg-[#FFFFFF] rounded-2xl border border-[#EAE5DC] shadow-xs p-4 sm:p-5 space-y-4">
-        {/* Real-time Search Input */}
-        <div className="relative">
-          <Search className="w-4 h-4 text-[#9E8E98] absolute left-3.5 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Vyhľadávať podľa mena, telefónu, emailu, produktu alebo čísla zákazky..."
-            className="w-full pl-10 pr-4 py-2.5 bg-[#FAF8F5] text-sm text-[#261B24] placeholder-[#9E8E98] rounded-xl border border-[#EAE5DC] focus:bg-[#FFFFFF] focus:outline-none focus:border-[#a62891] transition-all"
-          />
-          {searchQuery && (
+        {/* Top Row: Search Input + Add Manual Order Button */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 text-[#9E8E98] absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Vyhľadávať podľa mena, telefónu, emailu, produktu alebo čísla zákazky..."
+              className="w-full pl-10 pr-4 py-2.5 bg-[#FAF8F5] text-sm text-[#261B24] placeholder-[#9E8E98] rounded-xl border border-[#EAE5DC] focus:bg-[#FFFFFF] focus:outline-none focus:border-[#a62891] transition-all"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-[#9E8E98] hover:text-[#261B24]"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+
+          {onOpenNewOrder && (
             <button
               type="button"
-              onClick={() => setSearchQuery("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-[#9E8E98] hover:text-[#261B24]"
+              onClick={onOpenNewOrder}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#a62891] hover:bg-[#8F237D] text-white text-xs sm:text-sm font-bold shadow-xs transition-all cursor-pointer shrink-0"
             >
-              <X className="w-4 h-4" />
+              <Plus className="w-4 h-4" />
+              <span>Nová zákazka</span>
             </button>
           )}
         </div>
 
         {/* Status Filter Pills */}
-        <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar pt-1">
-          <button
-            type="button"
-            onClick={() => setStatusFilter("all")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap cursor-pointer ${
-              statusFilter === "all"
-                ? "bg-[#261B24] text-[#FAF8F5] shadow-xs font-semibold"
-                : "bg-[#FAF8F5] text-[#6B5B65] hover:bg-[#F4EFE7] border border-[#EAE5DC]"
-            }`}
-          >
-            <span>Všetky</span>
-            <span className="ml-1.5 opacity-70 font-mono">({statusCounts.all || 0})</span>
-          </button>
+        <div className="flex items-center justify-between gap-2 flex-wrap pt-1">
+          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar">
+            <button
+              type="button"
+              onClick={() => setStatusFilter("all")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap cursor-pointer ${
+                statusFilter === "all"
+                  ? "bg-[#261B24] text-[#FAF8F5] shadow-xs font-semibold"
+                  : "bg-[#FAF8F5] text-[#6B5B65] hover:bg-[#F4EFE7] border border-[#EAE5DC]"
+              }`}
+            >
+              <span>Všetky</span>
+              <span className="ml-1.5 opacity-70 font-mono">({statusCounts.all || 0})</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => setStatusFilter("vianoce")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap cursor-pointer border ${
-              statusFilter === "vianoce"
-                ? "bg-[#a62891] text-white border-[#a62891] shadow-xs font-semibold"
-                : "bg-[#FAF1F8] text-[#a62891] hover:bg-[#f3e1ef] border-[#ECD9E8]"
-            }`}
-          >
-            <span>Vianoce (22. 12.)</span>
-            <span className="ml-1.5 opacity-80 font-mono">({statusCounts.vianoce || 0})</span>
-          </button>
+            <button
+              type="button"
+              onClick={() => setStatusFilter("vianoce")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap cursor-pointer border ${
+                statusFilter === "vianoce"
+                  ? "bg-[#a62891] text-white border-[#a62891] shadow-xs font-semibold"
+                  : "bg-[#FAF1F8] text-[#a62891] hover:bg-[#f3e1ef] border-[#ECD9E8]"
+              }`}
+            >
+              <span>Vianoce (22. 12.)</span>
+              <span className="ml-1.5 opacity-80 font-mono">({statusCounts.vianoce || 0})</span>
+            </button>
 
-          {(["nova", "vyroba", "pripravena", "odovzdana", "zrusena"] as OrderStatus[]).map(
-            (statusKey) => {
-              const token = ORDER_STATUS_TOKENS[statusKey];
-              const count = statusCounts[statusKey] || 0;
-              const isSelected = statusFilter === statusKey;
+            {(["nova", "vyroba", "pripravena", "odovzdana", "zrusena"] as OrderStatus[]).map(
+              (statusKey) => {
+                const token = ORDER_STATUS_TOKENS[statusKey];
+                const count = statusCounts[statusKey] || 0;
+                const isSelected = statusFilter === statusKey;
 
-              return (
-                <button
-                  key={statusKey}
-                  type="button"
-                  onClick={() => setStatusFilter(statusKey)}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap cursor-pointer border ${
-                    isSelected
-                      ? "bg-[#261B24] text-[#FAF8F5] border-[#261B24] shadow-xs font-semibold"
-                      : "bg-[#FAF8F5] text-[#6B5B65] hover:bg-[#F4EFE7] border-[#EAE5DC]"
-                  }`}
-                >
-                  <span
-                    style={{ backgroundColor: token.dot }}
-                    className="w-1.5 h-1.5 rounded-full"
-                  />
-                  <span>{token.label}</span>
-                  <span className="opacity-70 font-mono">({count})</span>
-                </button>
-              );
-            }
-          )}
+                return (
+                  <button
+                    key={statusKey}
+                    type="button"
+                    onClick={() => setStatusFilter(statusKey)}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap cursor-pointer border ${
+                      isSelected
+                        ? "bg-[#261B24] text-[#FAF8F5] border-[#261B24] shadow-xs font-semibold"
+                        : "bg-[#FAF8F5] text-[#6B5B65] hover:bg-[#F4EFE7] border-[#EAE5DC]"
+                    }`}
+                  >
+                    <span
+                      style={{ backgroundColor: token.dot }}
+                      className="w-1.5 h-1.5 rounded-full"
+                    />
+                    <span>{token.label}</span>
+                    <span className="opacity-70 font-mono">({count})</span>
+                  </button>
+                );
+              }
+            )}
+          </div>
+
+          {/* Subtle Source Tracking Filter Pills (Web vs Osobne) */}
+          <div className="flex items-center gap-1 text-[11px]">
+            <button
+              type="button"
+              onClick={() => setStatusFilter(statusFilter === "web" ? "all" : "web")}
+              className={`px-2 py-1 rounded-md font-mono transition-colors cursor-pointer border ${
+                statusFilter === "web"
+                  ? "bg-[#261B24] text-white border-[#261B24]"
+                  : "bg-[#FAF8F5] text-[#9E8E98] hover:text-[#261B24] border-[#EAE5DC]"
+              }`}
+              title="Zobraziť len objednávky z webu"
+            >
+              web: {statusCounts.web || 0}
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatusFilter(statusFilter === "manual" ? "all" : "manual")}
+              className={`px-2 py-1 rounded-md font-mono transition-colors cursor-pointer border ${
+                statusFilter === "manual"
+                  ? "bg-[#261B24] text-white border-[#261B24]"
+                  : "bg-[#FAF8F5] text-[#9E8E98] hover:text-[#261B24] border-[#EAE5DC]"
+              }`}
+              title="Zobraziť len osobne nahodené objednávky"
+            >
+              osobne: {statusCounts.manual || 0}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -298,6 +358,18 @@ export function OrdersTab({
                         className="w-1.5 h-1.5 rounded-full"
                       />
                       <span>{token.label}</span>
+                    </span>
+
+                    {/* Tiny subtle tag indicating whether order came from web or was added manually */}
+                    <span
+                      className="text-[9px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#FAF8F5] text-[#9E8E98] border border-[#EAE5DC]/80 select-none"
+                      title={
+                        order.source === "manual"
+                          ? "Manuálne nahodená zákazka v administrácii"
+                          : "Objednávka prijatá cez web hanela.sk"
+                      }
+                    >
+                      {order.source === "manual" ? "osobne" : "web"}
                     </span>
 
                     {christmas && (

@@ -15,6 +15,7 @@ import { db, isFirebaseConfigured } from "./firebase";
 import {
   Order,
   OrderStatus,
+  OrderSource,
   OrderInspirationPhoto,
   BlockedDate,
   ProductPriceDoc,
@@ -22,8 +23,8 @@ import {
   CakeSizeOverride,
   CustomerDetails,
   ManualContact,
+  CartItem,
 } from "./types";
-import { CartItem } from "@/context/CartContext";
 import { PRODUCTS } from "@/data/products";
 
 // Local storage keys for fallback & offline persistence
@@ -186,6 +187,7 @@ export async function saveOrder(orderData: {
   customer: CustomerDetails;
   items: CartItem[];
   totalPrice: number;
+  source?: OrderSource;
   id?: string;
   orderNumber?: string;
   status?: OrderStatus;
@@ -218,6 +220,7 @@ export async function saveOrder(orderData: {
     orderNumber,
     createdAt: orderData.createdAt || new Date().toISOString(),
     status: orderData.status || "nova",
+    source: orderData.source || "web",
     pickupDate: orderData.pickupDate,
     pickupTime: orderData.pickupTime,
     customer: orderData.customer,
@@ -225,8 +228,8 @@ export async function saveOrder(orderData: {
     totalPrice: orderData.totalPrice,
     internalNote: orderData.internalNote || "",
     inspirationPhoto: orderData.inspirationPhoto,
-    emailSent: true,
-    emailSentAt: new Date().toISOString(),
+    emailSent: orderData.source !== "manual",
+    emailSentAt: orderData.source !== "manual" ? new Date().toISOString() : undefined,
   };
 
   if (!isFirebaseConfigured || !db) {

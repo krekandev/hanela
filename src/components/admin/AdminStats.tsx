@@ -25,14 +25,23 @@ export function computeAdminStats(
   todayPickupsCount: number;
   totalRevenue: number;
   blockedDaysCount: number;
+  webOrdersCount: number;
+  manualOrdersCount: number;
 } {
   let activeOrdersCount = 0;
   let todayPickupsCount = 0;
   let totalRevenue = 0;
+  let webOrdersCount = 0;
+  let manualOrdersCount = 0;
 
   for (const order of orders) {
     if (order.status !== "zrusena") {
       totalRevenue += order.totalPrice;
+      if (order.source === "manual") {
+        manualOrdersCount += 1;
+      } else {
+        webOrdersCount += 1;
+      }
       if (order.status === "nova" || order.status === "vyroba") {
         activeOrdersCount += 1;
       }
@@ -47,6 +56,8 @@ export function computeAdminStats(
     todayPickupsCount,
     totalRevenue: Math.round(totalRevenue * 100) / 100,
     blockedDaysCount: blockedDates.length,
+    webOrdersCount,
+    manualOrdersCount,
   };
 }
 
@@ -65,7 +76,7 @@ export function AdminStats({ orders, blockedDates, todayDateStr }: AdminStatsPro
       id: "active",
       label: "Aktívne vo výrobe",
       value: stats.activeOrdersCount,
-      subtext: "Nové a spracovávané zákazky",
+      subtext: `Web: ${stats.webOrdersCount} · Osobne: ${stats.manualOrdersCount}`,
       icon: Clock,
       accent: "text-[#a62891]",
     },

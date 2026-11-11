@@ -21,6 +21,7 @@ import {
   Maximize2,
   Download,
   X,
+  Plus,
 } from "lucide-react";
 import { Order, OrderStatus, BlockedDate, ORDER_STATUS_TOKENS } from "@/lib/types";
 import { deleteOrder } from "@/lib/orders-service";
@@ -34,6 +35,7 @@ interface CalendarTabProps {
   onUpdateInternalNote: (orderId: string, note: string) => Promise<void>;
   onPrintReceipt: (order: Order) => void;
   onDeleteOrder?: (orderId: string) => Promise<void>;
+  onOpenNewOrder?: (defaultDate?: string) => void;
 }
 
 const MONTH_NAMES = [
@@ -65,6 +67,7 @@ export function CalendarTab({
   onUpdateInternalNote,
   onPrintReceipt,
   onDeleteOrder,
+  onOpenNewOrder,
 }: CalendarTabProps) {
   // Calendar View month/year state
   const [currentYear, setCurrentYear] = useState<number>(() => {
@@ -387,6 +390,16 @@ export function CalendarTab({
           </div>
 
           <div className="flex items-center gap-2">
+            {onOpenNewOrder && (
+              <button
+                type="button"
+                onClick={() => onOpenNewOrder(selectedDayStr)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#a62891] hover:bg-[#8F237D] text-white text-xs font-bold shadow-2xs transition-colors cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Nová zákazka</span>
+              </button>
+            )}
             <span className="text-xs font-mono font-medium px-2.5 py-1 bg-[#FAF8F5] border border-[#EAE5DC] rounded-lg text-[#261B24]">
               {selectedDayOrders.length}{" "}
               {selectedDayOrders.length === 1
@@ -473,6 +486,18 @@ export function CalendarTab({
                                   className="w-1.5 h-1.5 rounded-full"
                                 />
                                 <span>{statusToken.label}</span>
+                              </span>
+
+                              {/* Subtle tiny source tag: web vs osobne */}
+                              <span
+                                className="text-[9px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#FAF8F5] text-[#9E8E98] border border-[#EAE5DC]/80 select-none"
+                                title={
+                                  order.source === "manual"
+                                    ? "Manuálne nahodená zákazka v admine"
+                                    : "Objednávka vytvorená cez web"
+                                }
+                              >
+                                {order.source === "manual" ? "osobne" : "web"}
                               </span>
 
                               {order.inspirationPhoto?.url && (

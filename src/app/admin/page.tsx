@@ -34,6 +34,7 @@ import { OrdersTab } from "@/components/admin/OrdersTab";
 import { CapacityTab } from "@/components/admin/CapacityTab";
 import { ContactsTab } from "@/components/admin/ContactsTab";
 import { PrintReceipt } from "@/components/admin/PrintReceipt";
+import { NewAdminOrderModal } from "@/components/admin/NewAdminOrderModal";
 
 export default function AdminPage() {
   // Auth state with localStorage session persistence
@@ -64,6 +65,10 @@ export default function AdminPage() {
 
   // Kitchen Print Receipt modal state
   const [receiptOrder, setReceiptOrder] = useState<Order | null>(null);
+
+  // Manual Admin Order Modal state
+  const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState<boolean>(false);
+  const [newOrderInitialDate, setNewOrderInitialDate] = useState<string | undefined>(undefined);
 
   // 1. Listen for Firebase Auth state changes with Whitelist verification
   useEffect(() => {
@@ -301,6 +306,10 @@ export default function AdminPage() {
               onUpdateInternalNote={handleUpdateInternalNote}
               onPrintReceipt={setReceiptOrder}
               onDeleteOrder={handleDeleteOrder}
+              onOpenNewOrder={(day) => {
+                setNewOrderInitialDate(day || selectedDayStr);
+                setIsNewOrderModalOpen(true);
+              }}
             />
           )}
 
@@ -311,6 +320,10 @@ export default function AdminPage() {
               onUpdateInternalNote={handleUpdateInternalNote}
               onPrintReceipt={setReceiptOrder}
               onDeleteOrder={handleDeleteOrder}
+              onOpenNewOrder={() => {
+                setNewOrderInitialDate(undefined);
+                setIsNewOrderModalOpen(true);
+              }}
             />
           )}
 
@@ -336,6 +349,16 @@ export default function AdminPage() {
         <PrintReceipt
           order={receiptOrder}
           onClose={() => setReceiptOrder(null)}
+        />
+
+        {/* Manual Admin Order Modal (Osobne / Telefón) */}
+        <NewAdminOrderModal
+          isOpen={isNewOrderModalOpen}
+          initialDate={newOrderInitialDate}
+          onClose={() => setIsNewOrderModalOpen(false)}
+          onOrderCreated={(createdOrder) => {
+            setSelectedDayStr(createdOrder.pickupDate);
+          }}
         />
       </div>
     </AdminAuthGuard>

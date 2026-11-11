@@ -146,6 +146,8 @@ export interface OrderInspirationPhoto {
   sizeBytes?: number;
 }
 
+export type OrderSource = "web" | "manual";
+
 /**
  * Canonical Order document schema (Firestore: orders/{orderId})
  */
@@ -159,6 +161,7 @@ export interface Order {
   items: CartItem[];
   totalPrice: number;
   status: OrderStatus;
+  source?: OrderSource; // "web" (default for online orders) or "manual" (added by owner in admin)
   internalNote?: string;
   inspirationPhoto?: OrderInspirationPhoto;
   emailSent?: boolean;
